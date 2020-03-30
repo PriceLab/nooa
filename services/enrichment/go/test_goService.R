@@ -5,10 +5,13 @@ library(jsonlite)
 #------------------------------------------------------------------------------------------------------------------------
 runTests <- function()
 {
+  suppressMessages({
     test_simpleEcho()
     test_postDemo()
     test_smallTable()
     test_goEnrichment()
+    test_keggEnrichment()
+    })
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
@@ -72,6 +75,34 @@ test_goEnrichment <- function()
    checkEquals(colnames(tbl), c("GOBPID", "Pvalue", "ExpCount", "Count", "Size", "Term", "genes", "OddsRatio"))
 
 } # test_goEnrichment
+#------------------------------------------------------------------------------------------------------------------------
+test_keggEnrichment <- function()
+{
+   printf("--- test_keggEnrichment")
+
+   dna.repair <- "GO:0006281"
+   x <- select(org.Hs.eg.db, keys=dna.repair, keytype="GOALL", columns="SYMBOL")
+   length(x$SYMBOL)
+   set.seed(17)
+   goi <- sort(sample(x$SYMBOL, 100))
+   goi.string <- toJSON(goi)
+   uri <- sprintf("http://localhost:8000/keggEnrich")
+   body.jsonString <- sprintf('%s', toJSON(list(geneSymbols=goi)))
+
+   r <- POST(uri, body=body.jsonString)
+
+      #sprintf('{"geneSymbols": "%s"}', goi.string))
+   tbl.kegg <- fromJSON(content(r)[[1]])
+
+   checkTrue(nrow(tbl.kegg) > 10)
+   checkEquals(colnames(tbl.kegg),
+               c("KEGGID", "Pvalue", "OddsRatio", "ExpCount", "Count", "Size", "Term"))
+
+     # this pathway should be at or near the top
+   base.excision.repair <- grep("Base excision repair", tbl.kegg$Term)
+   checkTrue(base.excision.repair <= 3)
+
+} # test_keggEnrichment
 #------------------------------------------------------------------------------------------------------------------------
 test_platinumResistanceGenes <- function()
 {

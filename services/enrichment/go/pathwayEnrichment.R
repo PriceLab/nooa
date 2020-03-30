@@ -15,8 +15,10 @@ library(plumber)
 #     mapped: successful, unique entrezIDs found for symbols
 #     multiples: quasi-successful, multiple ids found for each of these symbols
 #     failures: no entrezIDs found for these symbols
+
 source("symToGeneID.R");
-test_assignGeneIDs()
+# test_assignGeneIDs()
+
 #---------------------------------------------------------------------------------
 # requires a list of genes
 #---------------------------------------------------------------------------------
@@ -62,15 +64,11 @@ smalltable <- function(req, rows)
 #* @post /goEnrich
 goEnrich <- function(req, geneSymbols)
 {
-  #print(geneSymbols)
-  #print(length(geneSymbols))
-
-  #geneSymbols <- fromJSON(geneSymbols)
-  #print(geneSymbols)
-  symbol.entrez.map <- assignGeneIDs(geneSymbols)
+  suppressMessages(
+     symbol.entrez.map <- assignGeneIDs(geneSymbols)
+     )
   gene.universe = character(0)
   geneIDs <- unlist(symbol.entrez.map$mapped, use.names=FALSE)
-  #print(geneIDs)
 
   go.params <- new("GOHyperGParams", geneIds=unique(geneIDs),
                    universeGeneIds = gene.universe, annotation = "org.Hs.eg.db",
@@ -88,15 +86,18 @@ goEnrich <- function(req, geneSymbols)
                            keeper.geneSymbols <- unlist(keeper.geneSymbols, use.names=FALSE)
                            paste(keeper.geneSymbols, collapse=";")
                            })
+
   tbl.go$genes <- unlist(geneSymbols, use.names=FALSE)
 
   return(toJSON(tbl.go))
 
 } # goEnrich
 #---------------------------------------------------------------------------------
-keggEnrich <- function(geneIDs)
+#* Calculate a data.frame of enriched KEGG pathways
+#* @post /keggEnrich
+keggEnrich <- function(req, geneSymbols)
 {
-   symbol.entrez.map <- assignGeneIDs(geneIDs)
+   symbol.entrez.map <- assignGeneIDs(geneSymbols)
 
    gene.universe = character(0)
    geneIDs <- unlist(symbol.entrez.map$mapped, use.names=FALSE)
@@ -107,7 +108,9 @@ keggEnrich <- function(geneIDs)
 
    kegg.hgr  <- hyperGTest(kegg.params)
 
-   return(kegg.hgr)
+   tbl.kegg <- summary(kegg.hgr)
+
+   return(toJSON(tbl.kegg))
 
 } # keggEnrich
 #--------------------------------------------------------------------------------
@@ -118,16 +121,29 @@ test_goEnrich <- function()
                       "SLC24A4", "RIN3", "DSG2", "INPP5D", "MEF2C", "NME8", "ZCWPW1",
                       "CELF1", "FERMT2", "CASS4", "APOE", "TOMM40")
 
-   #x <- assignGeneIDs(igap.ad.genes)
-   #lapply(x, length)   # mapped: 25   failures: 0   muplitples: 0
-   #geneIDs <- unlist(x$mapped, use.names=FALSE)
-
-   tbl.go <- goEnrich(head(igap.ad.genes))
+   tbl.go.json <- goEnrich(req=NA, head(igap.ad.genes))
+   tbl.go <- fromJSON(tbl.go.json)
+   dim(tbl.go)
    checkEquals(ncol(tbl.go), 8)
    checkTrue(nrow(tbl.go) > 100)
    checkEquals(tbl.go$Term[1], "negative regulation of amyloid-beta formation")
    checkEquals(tbl.go$genes[1], "BIN1;CLU")
 
+} # test_goEnrich
+#--------------------------------------------------------------------------------
+test_keggEnrich <- function()
+{
+   igap.ad.genes <- c("CR1", "BIN1", "CD2AP", "EPHA1", "CLU", "MS4A6A", "PICALM",
+                      "ABCA7", "CD33", "HLA-DRB5", "HLA-DRB1", "PTK2B", "SORL1",
+                      "SLC24A4", "RIN3", "DSG2", "INPP5D", "MEF2C", "NME8", "ZCWPW1",
+                      "CELF1", "FERMT2", "CASS4", "APOE", "TOMM40")
+
+   tbl.kegg.json <- keggEnrich(req=NA, head(igap.ad.genes, n=-1))
+   tbl.kegg <- fromJSON(tbl.kegg.json)
+   checkEquals(ncol(tbl.kegg), 7)
+   checkTrue(nrow(tbl.kegg) > 10)
+   checkEquals(tbl.kegg$Term[1], "Hematopoietic cell lineage")
+   checkEquals(tbl.kegg$Count[1], 4)
 
 } # test_goEnrich
 #--------------------------------------------------------------------------------

@@ -13,7 +13,7 @@ kill:
 	- kill `ps -ef | grep runService.R | egrep -v grep| awk '{print $$2}'`
 
 test:
-	R -f test_goService.R
+	R -f test_pathwayEnrichmentService.R
 
 
 

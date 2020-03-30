@@ -124,7 +124,15 @@ test_platinumResistanceGenes <- function()
 
       #sprintf('{"geneSymbols": "%s"}', goi.string))
    tbl <- fromJSON(content(r)[[1]])
+   subset(tbl, Count > 3 & Pvalue < 0.05)
 
+   uri <- sprintf("http://localhost:8000/keggEnrich")
+   body.jsonString <- sprintf('%s', toJSON(list(geneSymbols=goi)))
+
+   r <- POST(uri, body=body.jsonString)
+
+      #sprintf('{"geneSymbols": "%s"}', goi.string))
+   tbl.kegg <- fromJSON(content(r)[[1]])
 
 } # test_platinumResitanceGenes
 #------------------------------------------------------------------------------------------------------------------------

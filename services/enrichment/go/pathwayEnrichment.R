@@ -1,3 +1,4 @@
+library(jsonlite)
 library(GSEABase)
 library(GOstats)
 library(GO.db)
@@ -33,20 +34,53 @@ function(msg="")
   list(msg = paste0("The message is: '", msg, "'"))
 }
 #---------------------------------------------------------------------------------
-goEnrich <- function(geneSymbols)
+#* return the input, add calculate length of the name
+#* @post /postdemo
+postdemo <- function(req, id, name)
 {
+  list(
+    id = id,
+    name = name,
+    nameLength = nchar(name)
+    #   raw = req$postBody
+    )
+
+}  # postdemo
+#---------------------------------------------------------------------------------
+#* return the input, add calculate length of the name
+#* @post /head_mtcars
+smalltable <- function(req, rows)
+{
+   tbl <- head(mtcars, n=rows)
+
+   #write.table(tbl, file="testing_v3_xyz.csv", sep=",", row.names=FALSE, col.names=TRUE, append = T)
+   return(toJSON(tbl))
+
+}  # smalltable
+#---------------------------------------------------------------------------------
+#* Calculate a data.frame of enriched GO categories
+#* @post /goEnrich
+goEnrich <- function(req, geneSymbols)
+{
+  #print(geneSymbols)
+  #print(length(geneSymbols))
+
+  #geneSymbols <- fromJSON(geneSymbols)
+  #print(geneSymbols)
   symbol.entrez.map <- assignGeneIDs(geneSymbols)
   gene.universe = character(0)
   geneIDs <- unlist(symbol.entrez.map$mapped, use.names=FALSE)
+  #print(geneIDs)
 
   go.params <- new("GOHyperGParams", geneIds=unique(geneIDs),
                    universeGeneIds = gene.universe, annotation = "org.Hs.eg.db",
                    ontology = 'BP', pvalueCutoff = 0.05, conditional = FALSE,
                    testDirection = "over")
 
-   go.bp.hgr <- hyperGTest(go.params)
-   tbl.go <- summary(go.bp.hgr)
-   geneSymbols <- lapply(tbl.go$GOBPID,
+  go.bp.hgr <- hyperGTest(go.params)
+  tbl.go <- summary(go.bp.hgr)
+  #print(tbl.go)
+  geneSymbols <- lapply(tbl.go$GOBPID,
                         function(goTerm){
                            all.geneIDs.this.term <- unique(unlist(get(goTerm, org.Hs.egGO2ALLEGS)))
                            keepers <- intersect(geneIDs, all.geneIDs.this.term)
@@ -54,8 +88,9 @@ goEnrich <- function(geneSymbols)
                            keeper.geneSymbols <- unlist(keeper.geneSymbols, use.names=FALSE)
                            paste(keeper.geneSymbols, collapse=";")
                            })
-    tbl.go$genes <- unlist(geneSymbols, use.names=FALSE)
-    tbl.go
+  tbl.go$genes <- unlist(geneSymbols, use.names=FALSE)
+
+  return(toJSON(tbl.go))
 
 } # goEnrich
 #---------------------------------------------------------------------------------

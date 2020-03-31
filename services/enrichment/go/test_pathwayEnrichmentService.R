@@ -104,6 +104,25 @@ test_keggEnrichment <- function()
 
 } # test_keggEnrichment
 #------------------------------------------------------------------------------------------------------------------------
+
+# Expression Analysis of Platinum Sensitive and Resistant Epithelial Ovarian Cancer Patient Samples
+# Reveals New Candidates for Targeted Therapies.
+# https://www.ncbi.nlm.nih.gov/pubmed/30056367
+#
+# Ovarian cancer has the highest mortality rate of all gynecologic malignancies. Identification of
+# new biomarkers is highly needed due to its late diagnosis and high recurrence rate. The objective
+# of this study was to identify mechanisms of therapy resistance and potential biomarkers by
+# analyzing mRNA and protein expression from samples derived from patients with platinum-sensitive
+# and -resistant ovarian cancer (total cohort n = 53). The data revealed new candidates for targeted
+# therapies, such as GREB1 and ROR2. We showed that the development of platinum resistance
+# correlated with upregulation of ROR2, whereas GREB1 was downregulated. Moreover, we demonstrated
+# that high levels of ROR2 in platinum-resistant samples were associated with upregulation of Wnt5a,
+# STAT3 and NF-kB levels, suggesting that a crosstalk between the non-canonical Wnt5a-ROR2 and
+# STAT3/NF-kB signaling pathways. Upregulation of ROR2, Wnt5a, STAT3 and NF-kB was further detected
+# in a platinum-resistant cell-line model. The results of the present study provided insight into
+# molecular mechanisms associated with platinum resistance that could be further investigated to
+# improve treatment strategies in this clinically challenging gynecological cancer.
+#
 test_platinumResistanceGenes <- function()
 {
    printf("--- test_platinumResistanceGenes")

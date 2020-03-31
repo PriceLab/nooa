@@ -106,33 +106,49 @@ test_keggEnrichment <- function()
 #------------------------------------------------------------------------------------------------------------------------
 test_platinumResistanceGenes <- function()
 {
-    printf("--- test_platinumResistanceGenes")
+   printf("--- test_platinumResistanceGenes")
 
-    goi <-   c("COLEC11", "MYCN", "ESM1", "IGF1R", "TNNC1", "LGSN", "LOC100134423", "DLK1", "CRYGC",
-               "A_33_P3286709", "PLEKHG4B", "TSPAN8", "ENPP6", "FLJ30901", "PROM1", "COL22A1",
-               "KIAA1324", "PTCH2", "SLC35F3", "GABRG3", "LOC613266", "LCE1E", "B4GALNT4", "STC2",
-               "FOXL2NB", "AK124496", "CU677518", "NM_130777", "NR_102701", "NSG1", "STAR",
-               "MCTS2P", "TRABD2A", "DEPTOR", "CLEC4GP1", "LINC01405", "COL2A1", "HS6ST2", "PRAME",
-               "LINC02398", "GJB7", "PLCXD3", "ERVI-1", "ZNF556", "NTS", "BU963192", "GMNC",
-               "A_33_P3274001", "CRYGD", "GREB1")
+   f <- "~/github/nooa/explorations/pathway-enrichment/staff-downRegulated.tsv"
+   tbl <- read.table(f, sep="\t", as.is=TRUE, header=TRUE)
+   goi.down <- tbl$Gene.Name
+   length(goi.down)
 
-   goi.string <- toJSON(goi)
+   f <- "~/github/nooa/explorations/pathway-enrichment/staff-upRegulated.tsv"
+   tbl <- read.table(f, sep="\t", as.is=TRUE, header=TRUE)
+   goi.up <- tbl$Gene.Name
+   length(goi.up)
+
+    #------------------------
+    #  up-regulated genes
+    #------------------------
    uri <- sprintf("http://localhost:8000/goEnrich")
-   body.jsonString <- sprintf('%s', toJSON(list(geneSymbols=goi)))
+   body.jsonString <- sprintf('%s', toJSON(list(geneSymbols=c(goi.up))))
 
    r <- POST(uri, body=body.jsonString)
 
-      #sprintf('{"geneSymbols": "%s"}', goi.string))
-   tbl <- fromJSON(content(r)[[1]])
-   subset(tbl, Count > 3 & Pvalue < 0.05)
+   tbl.up <- fromJSON(content(r)[[1]])
+   subset(tbl.up, Count > 3 & Pvalue < 0.05)
+
+    #------------------------
+    #  down-regulated genes
+    #------------------------
+
+   body.jsonString <- sprintf('%s', toJSON(list(geneSymbols=goi.down)))
+   r <- POST(uri, body=body.jsonString)
+   tbl.down <- fromJSON(content(r)[[1]])
+   subset(tbl.down, Count > 3 & Pvalue < 0.05)
+
+
+    #------------------------
+    #  down-regulated genes
+    #------------------------
 
    uri <- sprintf("http://localhost:8000/keggEnrich")
-   body.jsonString <- sprintf('%s', toJSON(list(geneSymbols=goi)))
+   body.jsonString <- sprintf('%s', toJSON(list(geneSymbols=c(goi.down, goi.up))))
 
    r <- POST(uri, body=body.jsonString)
-
-      #sprintf('{"geneSymbols": "%s"}', goi.string))
    tbl.kegg <- fromJSON(content(r)[[1]])
+   dim(tbl.kegg)
 
 } # test_platinumResitanceGenes
 #------------------------------------------------------------------------------------------------------------------------

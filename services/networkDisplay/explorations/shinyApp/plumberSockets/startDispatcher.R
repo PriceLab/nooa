@@ -1,0 +1,5 @@
+library(plumber)
+r <- plumb("dispatch.R")
+r$run(port=8004)
+#r <- plumb("tinyCyjShiny.R")
+#r$run(port=8001)

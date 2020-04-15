@@ -130,12 +130,13 @@ server = function(input, output, session) {
      conn <- file("foo.png", "wb")
      writeBin(png.parsed.binary, conn)
      close(conn)
-
      })
 
-    #----------------------------------------------------
-    # websocket server-side code starts here
-    #----------------------------------------------------
+   setupWebSocket(input, output, session)
+
+} # server
+#----------------------------------------------------------------------------------------------------
+setupWebSocket <- function(input, output, session){
 
   status <- reactiveVal("Waiting for input")
   history <- reactiveVal(
@@ -144,9 +145,9 @@ server = function(input, output, session) {
 
   setEnabled <- function(enable) {
     withReactiveDomain(session, {
-      shinyjs::toggleState("input", enable)
-      shinyjs::toggleState("send", enable)
-      shinyjs::toggleState("close", enable)
+      shinyjs::toggleState("textMessageInput", enable)
+      shinyjs::toggleState("sendButton", enable)
+      shinyjs::toggleState("closeClose", enable)
       })
     }
     setEnabled(FALSE)
@@ -212,6 +213,6 @@ server = function(input, output, session) {
     status()
     })
 
-} # server
+} # setupWebSocket
 #----------------------------------------------------------------------------------------------------
 runApp(shinyApp(ui=ui,server=server), port=port)

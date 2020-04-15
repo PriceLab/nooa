@@ -1,5 +1,5 @@
 library(plumber)
-library(processx)
+#library(processx)
 library(callr)
 #----------------------------------------------------------------------------------------------------
 #* list commands
@@ -36,6 +36,8 @@ function(req, res) {
 #' @html
 function(req, res)
 {
+   # abandoned this approach because only Rscript will pass args, needed to set port
+
   proc <- process$new("/usr/local/bin/R", " -f /Users/paul/github/cyjShiny/inst/examples/tinyApp/tinyApp.R")
   Sys.sleep(2)
   res$status <- 303 # redirect
@@ -46,6 +48,9 @@ function(req, res)
 #' @get /cySockets
 #' @html
 function(req, res) {
+
+     # abandoned this approach because only Rscript will pass args, needed to set port
+
   command <- "/usr/local/bin/Rscript"
   directory <- "/Users/paul/github/nooa/services/networkDisplay/explorations/shinyApp/tinyCyjShiny"
   scriptFile <- "cyjWithWebSockets.R"
@@ -72,6 +77,9 @@ function(req, res) {
 #----------------------------------------------------------------------------------------------------
 #' @get /cySock
 #' @html
+#
+# satisfactory approach: port is passed to the shinyApp, to the res and to the html return string
+#
 function(req, res) {
   command <- "/usr/local/bin/Rscript"
   directory <- "/Users/paul/github/nooa/services/networkDisplay/explorations/shinyApp/tinyCyjShiny"

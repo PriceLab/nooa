@@ -24,10 +24,10 @@ function(req, res) {
   res$setHeader("Location", "http://google.com")
 "<html>
   <head>
-    <meta http-equiv=\"Refresh\" content=\"0; url=http://google.com\" />
+    <meta http-equiv='Refresh' content='0; url=http://google.com' />
   </head>
   <body>
-    <p>Please follow <a href=\"http://www.example.com/\">this link</a>.</p>
+    <p>Please follow <a href='http://www.example.com/'>this link</a>.</p>
   </body>
 </html>"
 }

@@ -5,10 +5,11 @@ library(websocket)
 #----------------------------------------------------------------------------------------------------
 # one way to create a graph is via the Bioconductor graphNEL class.
 # here we use the data.frame strategy.
+# websocket additions from https://github.com/rstudio/shiny-examples/blob/master/147-websocket/app.R
 #----------------------------------------------------------------------------------------------------
 printf <- function(...) print(noquote(sprintf(...)))
 #----------------------------------------------------------------------------------------------------
-port <- 9991
+port <- 9991  # a default value, usually overridden from the command line
 args = commandArgs(trailingOnly=TRUE)
 if(length(args) > 0)
     port <- as.integer(args[1])
@@ -40,15 +41,15 @@ ui = shinyUI(fluidPage(
                  h1("WebSocket client", style = "text-align: center;"),
                  tags$p(
                      tags$strong("Status:"),
-                     textOutput("status", inline = TRUE)
+                     textOutput("wsStatus", inline = TRUE)
                      ),
                  wellPanel(
-                     textInput("input", "Message to send:"),
-                     actionButton("send", "Send"),
-                     actionButton("close", "Close")
+                     textInput("textMessageInput", "Message to send:"),
+                     actionButton("sendButton", "Send"),
+                     actionButton("closeButton", "Close")
                     ),
                   tags$strong("Messages received:"),
-                  tableOutput("output")
+                  tableOutput("wsTableOutput")
                   )
            ),
         actionButton("selectRandomNodeButton", "Select random node"),
@@ -74,7 +75,7 @@ server = function(input, output, session) {
 
     # https://gist.github.com/tgirke/8b9abe202c59bca72012ddeb79303e56
 
-    output$updatableText<- renderText({
+   output$updatableText<- renderText({
         s <- session$clientData$url_search
         paste("search? ", s)
         })
@@ -133,7 +134,7 @@ server = function(input, output, session) {
      })
 
     #----------------------------------------------------
-    # websocket code starts here
+    # websocket server-side code starts here
     #----------------------------------------------------
 
   status <- reactiveVal("Waiting for input")
@@ -181,32 +182,33 @@ server = function(input, output, session) {
   showModal(
     modalDialog(
       textInput("url", "WebSocket URL", "wss://echo.websocket.org"),
-      footer = actionButton("connect", "OK"),
+      footer = actionButton("wsConnectButton", "OK"),
       easyClose = FALSE,
       size = "s"
       )
     ) # showMdoal
 
-  observeEvent(input$connect, {
+  observeEvent(input$wsConnectButton, {
     removeModal()
     ws <<- connect(input$url)
     })
 
-  observeEvent(input$send, {
-    msg <- input$input
+  observeEvent(input$sendButton, {
+    printf("--- sending message to ws")
+    msg <- input$textMessageInput
     ws$send(msg)
     updateTextInput(session, "input", value = "")
     })
 
-  observeEvent(input$close, {
+  observeEvent(input$closeButton, {
     ws$close()
     })
 
-  output$output <- renderTable(width = "100%", {
+  output$wsTableOutput <- renderTable(width = "100%", {
     history()
     })
 
-  output$status <- renderText({
+  output$wsStatus <- renderText({
     status()
     })
 

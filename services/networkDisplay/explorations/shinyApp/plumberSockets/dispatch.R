@@ -1,6 +1,9 @@
 library(plumber)
-#library(processx)
 library(callr)
+library(httpuv)
+#----------------------------------------------------------------------------------------------------
+websocket <- NULL
+envApp <- new.env(parent=emptyenv())
 #----------------------------------------------------------------------------------------------------
 #* list commands
 #* @get /
@@ -54,4 +57,29 @@ function(req, res)
 
 } # cySock
 #----------------------------------------------------------------------------------------------------
+createWebSocketServer <- function()
+{
+  callFunction <- function(req){
+     list(
+        status = 200L,
+        headers = list('Content-Type' = 'text/html'),
+        body = c(file="index.html")
+        )
+      } # callFunction
 
+  onOpenFunction <- function(ws){
+     websocket <<- ws
+     ws$onMessage(function(binary, message) {
+       printf("message received: %s", message)
+       ws$send(toupper(message))
+       })
+     } # onOpenFunction
+
+  envApp <- new.env(parent=emptyenv())
+  envApp$call <- callFunction
+  envApp$onWSOpen <- onOpenFunction
+  browseURL("http://localhost:9455/")
+  s <- startServer("0.0.0.0", 9455, envApp)
+
+} # createWebSocketServer
+#----------------------------------------------------------------------------------------------------

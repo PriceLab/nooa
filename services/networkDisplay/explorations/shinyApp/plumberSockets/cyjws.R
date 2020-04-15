@@ -9,6 +9,8 @@ library(websocket)
 #----------------------------------------------------------------------------------------------------
 printf <- function(...) print(noquote(sprintf(...)))
 #----------------------------------------------------------------------------------------------------
+WEB.SOCKET.URL <- "ws://localhost:9455"
+
 port <- 9991  # a default value, usually overridden from the command line
 args = commandArgs(trailingOnly=TRUE)
 if(length(args) > 0)
@@ -150,10 +152,12 @@ setupWebSocket <- function(input, output, session){
       shinyjs::toggleState("closeClose", enable)
       })
     }
-    setEnabled(FALSE)
+    setEnabled(TRUE)
+
 
   connect <- function(url) {
-    ws <- WebSocket$new("ws://echo.websocket.org")
+    #ws <- WebSocket$new("ws://echo.websocket.org")
+    ws <- WebSocket$new(WEB.SOCKET.URL)
     status(paste0("Connecting to ", url, ", please wait..."))
     ws$onError(function(event) {
       setEnabled(FALSE)
@@ -178,25 +182,14 @@ setupWebSocket <- function(input, output, session){
     ws
     } # connect
 
-  ws <- NULL
-
-  showModal(
-    modalDialog(
-      textInput("url", "WebSocket URL", "wss://echo.websocket.org"),
-      footer = actionButton("wsConnectButton", "OK"),
-      easyClose = FALSE,
-      size = "s"
-      )
-    ) # showMdoal
-
-  observeEvent(input$wsConnectButton, {
-    removeModal()
-    ws <<- connect(input$url)
-    })
+    ws <<- connect(WEB.SOCKET.URL)
 
   observeEvent(input$sendButton, {
-    printf("--- sending message to ws")
+    printf("--- sendButton, sending message to ws")
     msg <- input$textMessageInput
+    printf("--- msg: %s", msg)
+    printf("---- ws")
+    print(ws)
     ws$send(msg)
     updateTextInput(session, "input", value = "")
     })

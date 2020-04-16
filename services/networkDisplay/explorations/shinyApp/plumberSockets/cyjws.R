@@ -74,7 +74,6 @@ ui = shinyUI(fluidPage(
 #----------------------------------------------------------------------------------------------------
 server = function(input, output, session) {
 
-
     # https://gist.github.com/tgirke/8b9abe202c59bca72012ddeb79303e56
 
    output$updatableText<- renderText({
@@ -154,9 +153,7 @@ setupWebSocket <- function(input, output, session){
     }
     setEnabled(TRUE)
 
-
   connect <- function(url) {
-    #ws <- WebSocket$new("ws://echo.websocket.org")
     ws <- WebSocket$new(WEB.SOCKET.URL)
     status(paste0("Connecting to ", url, ", please wait..."))
     ws$onError(function(event) {
@@ -164,6 +161,18 @@ setupWebSocket <- function(input, output, session){
       status(paste0("Error: ", event$message))
       })
     ws$onMessage(function(event) {
+      newMessage <- fromJSON(event$data);
+      status(paste0("newMessage: ", newMessage))
+      if(is.list(newMessage)){
+          if("cmd" %in% names(newMessage)){
+             cmd <- newMessage[["cmd"]]
+             payload <- newMessage[["payload"]]
+             status(paste0("CMD: ", cmd))
+             if(cmd == "selectNodes"){
+                 selectNodes(session, fromJSON(payload))
+                 }
+             } # cmd field in message
+          } # newMessage is a list
       old <- isolate(history())
       new <- data.frame(
         Date = format(Sys.time()),

@@ -1,0 +1,2 @@
+cmd <- list(cmd="selectNodes", payload=c("A", "B"))
+GET(sprintf("http://localhost:8004/cyjCommand?cmdString=%s", toJSON(cmd, auto_unbox=TRUE)))

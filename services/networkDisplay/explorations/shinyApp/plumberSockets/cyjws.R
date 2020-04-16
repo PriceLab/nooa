@@ -39,7 +39,7 @@ ui = shinyUI(fluidPage(
   sidebarLayout(
      sidebarPanel(
         fluidRow(
-          column(6, offset = 3,
+          column(12,
                  h1("WebSocket client", style = "text-align: center;"),
                  tags$p(
                      tags$strong("Status:"),
@@ -48,10 +48,10 @@ ui = shinyUI(fluidPage(
                  wellPanel(
                      textInput("textMessageInput", "Message to send:"),
                      actionButton("sendButton", "Send"),
-                     actionButton("closeButton", "Close")
+                     actionButton("closeButton", "Close"),
+                     actionButton("debugMessageButton", "debug message")
                     ),
-                  tags$strong("Messages received:"),
-                  tableOutput("wsTableOutput")
+                  tags$strong("Messages received:")
                   )
            ),
         actionButton("selectRandomNodeButton", "Select random node"),
@@ -65,8 +65,12 @@ ui = shinyUI(fluidPage(
         h3(textOutput("updatableText")),
         width=3
         ),
+
      mainPanel(
-        cyjShinyOutput('cyjShiny'),
+      tabsetPanel(type = "tabs",
+          tabPanel("network",  cyjShinyOutput('cyjShiny')),
+          tabPanel("Debug", tableOutput("wsTableOutput"))
+          ),
         width=9
         )
      ) # sidebarLayout
@@ -75,6 +79,7 @@ ui = shinyUI(fluidPage(
 server = function(input, output, session) {
 
     # https://gist.github.com/tgirke/8b9abe202c59bca72012ddeb79303e56
+
 
    output$updatableText<- renderText({
         s <- session$clientData$url_search
@@ -139,10 +144,10 @@ server = function(input, output, session) {
 #----------------------------------------------------------------------------------------------------
 setupWebSocket <- function(input, output, session){
 
-  status <- reactiveVal("Waiting for input")
-  history <- reactiveVal(
-    data.frame(Date = NULL, Message = NULL)
-    )
+   status <- reactiveVal("Waiting for input")
+   history <- reactiveVal(
+     data.frame(Date = NULL, Message = NULL)
+     )
 
   setEnabled <- function(enable) {
     withReactiveDomain(session, {
@@ -153,6 +158,16 @@ setupWebSocket <- function(input, output, session){
     }
     setEnabled(TRUE)
 
+    appendToHistory <- function(x) {
+       old <- isolate(history())
+       new <- data.frame(
+         Date = format(Sys.time()),
+         Message = x,
+         stringsAsFactors = FALSE)
+       history(rbind(new, old))
+       }
+
+
   connect <- function(url) {
     ws <- WebSocket$new(WEB.SOCKET.URL)
     status(paste0("Connecting to ", url, ", please wait..."))
@@ -162,27 +177,24 @@ setupWebSocket <- function(input, output, session){
       })
     ws$onMessage(function(event) {
       newMessage <- fromJSON(event$data);
+      status("new websocket message")
+      appendToHistory(newMessage)
       status(paste0("newMessage: ", newMessage))
       if(is.list(newMessage)){
           if("cmd" %in% names(newMessage)){
              cmd <- newMessage[["cmd"]]
              payload <- newMessage[["payload"]]
-             status(paste0("CMD: ", cmd))
+             #status(paste0("CMD: ", cmd))
              if(cmd == "selectNodes"){
-                 selectNodes(session, fromJSON(payload))
-                 }
+                #status(paste0("asking session to selectNodes: ", payload))
+                selectNodes(session, payload) #c("A", "B"))
+                }
              } # cmd field in message
           } # newMessage is a list
-      old <- isolate(history())
-      new <- data.frame(
-        Date = format(Sys.time()),
-        Message = event$data,
-        stringsAsFactors = FALSE)
-      history(rbind(new, old))
       })
     ws$onOpen(function(event) {
+      status(paste0("Connected to ", WEB.SOCKET.URL))
       setEnabled(TRUE)
-      status(paste0("Connected to ", isolate(input$url)))
       })
     ws$onClose(function(event) {
       setEnabled(FALSE)
@@ -205,6 +217,15 @@ setupWebSocket <- function(input, output, session){
 
   observeEvent(input$closeButton, {
     ws$close()
+    })
+
+  observeEvent(input$debugMessageButton, {
+    old <- isolate(history())
+    new <- data.frame(
+       Date = format(Sys.time()),
+       Message = "abracadabra",
+       stringsAsFactors = FALSE)
+    history(rbind(new, old))
     })
 
   output$wsTableOutput <- renderTable(width = "100%", {

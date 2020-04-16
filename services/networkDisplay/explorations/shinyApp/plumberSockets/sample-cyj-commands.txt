@@ -1,2 +1,10 @@
+library(httr)
+library(jsonlite)
+cmd <- list(cmd="selectNodes", payload=c("A"))
+cmd <- list(cmd="selectNodes", payload=c("B"))
+
+GET(sprintf("http://localhost:8004/cyjCommand?cmdString=%s", toJSON(cmd, auto_unbox=TRUE)))
+
 cmd <- list(cmd="selectNodes", payload=c("A", "B"))
+cmd <- list(cmd="selectNodes", payload=c("A", "C"))
 GET(sprintf("http://localhost:8004/cyjCommand?cmdString=%s", toJSON(cmd, auto_unbox=TRUE)))

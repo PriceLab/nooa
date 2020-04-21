@@ -12,7 +12,7 @@ dim(tbl.edges)
 score <- -log10(tbl.edges$pval)
 tbl.edges$score <- score
 stopifnot(all(c(tbl.edges$source, tbl.edges$target) %in% tbl.nodes$id))
-g.json.string <- RCyjs::dataFramesToJSON(tbl.edges, tbl.nodes)
+g.json.string <- cyjShiny::dataFramesToJSON(tbl.edges, tbl.nodes)
 
 cohort.names <- colnames(tbl.nodes)[5:37]  # from F.18.25  to MF.70.89
 button.style <- "padding:4px; font-size:90%"
@@ -101,5 +101,7 @@ server = function(input, output, session) {
 
 } # server
 #----------------------------------------------------------------------------------------------------
-browseURL("http://localhost:6769")
-runApp(shinyApp(ui=ui,server=server), port=6769)
+runApp(shinyApp(ui=ui, server=server), port=3838)
+# browseURL("http://localhost:6769")
+#runApp(shinyApp(ui=ui,server=server), port=6769)
+

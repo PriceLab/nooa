@@ -2,6 +2,8 @@ library(shiny)
 library(cyjShiny)
 library(htmlwidgets)
 #----------------------------------------------------------------------------------------------------
+printf <- function(...) print (noquote (sprintf (...)))
+#----------------------------------------------------------------------------------------------------
 # one way to create a graph is via the Bioconductor graphNEL class.
 # here we use the data.frame strategy.
 #----------------------------------------------------------------------------------------------------
@@ -101,7 +103,7 @@ server = function(input, output, session) {
 
 } # server
 #----------------------------------------------------------------------------------------------------
-runApp(shinyApp(ui=ui, server=server), port=3838)
+shinyApp(ui=ui, server=server)
 # browseURL("http://localhost:6769")
 #runApp(shinyApp(ui=ui,server=server), port=6769)
 

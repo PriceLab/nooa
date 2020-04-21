@@ -18,6 +18,8 @@ g.json.string <- cyjShiny::dataFramesToJSON(tbl.edges, tbl.nodes)
 
 cohort.names <- colnames(tbl.nodes)[5:37]  # from F.18.25  to MF.70.89
 button.style <- "padding:4px; font-size:90%"
+
+currentFrame <- 1;
 #----------------------------------------------------------------------------------------------------
 ui = shinyUI(fluidPage(
 
@@ -27,16 +29,17 @@ ui = shinyUI(fluidPage(
   sidebarLayout(
      sidebarPanel(
         selectInput("selectCohort", "Select Cohort", c("", cohort.names), selectize=FALSE),
-        actionButton("loopCohorts", "Loop Cohorts", style=button.style),
+        #actionButton("nextCohortButton", "Next Cohort", style=button.style),
+        #actionButton("previousCohortButton", "previous Cohort", style=button.style),
         hr(),
         actionButton("fitButton", "Fit", style=button.style),
         actionButton("fitSelectionButton", "Fit Selected", style=button.style),
-        actionButton("sfn", "Select First Neighbor", style=button.style),
-        actionButton("hideUnselected", "Hide Unselected", style=button.style),
-        actionButton("showAll", "Show All", style=button.style),
-        actionButton("clearSelection", "Deselect Nodes", style=button.style),
-        actionButton("getSelectedNodes", "Get Selected Nodes", style=button.style),
-        htmlOutput("selectedNodesDisplay"),
+        #actionButton("sfn", "Select First Neighbor", style=button.style),
+        #actionButton("hideUnselected", "Hide Unselected", style=button.style),
+        #actionButton("showAll", "Show All", style=button.style),
+        #actionButton("clearSelection", "Deselect Nodes", style=button.style),
+        #actionButton("getSelectedNodes", "Get Selected Nodes", style=button.style),
+        #htmlOutput("selectedNodesDisplay"),
         width=2,
         style="margin-top: 20px; margin-right:0px; padding-right:0px;"
         ),

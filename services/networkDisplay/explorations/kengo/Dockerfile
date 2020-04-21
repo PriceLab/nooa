@@ -3,8 +3,8 @@ WORKDIR /home/shiny
 RUN mkdir /home/shiny/data
 COPY installPrerequisites.R .
 RUN R -f ./installPrerequisites.R .
-COPY packages/cyjShiny_1.0.15.tar.gz .
-RUN R CMD INSTALL cyjShiny_1.0.15.tar.gz
+COPY packages/cyjShiny_1.0.16.tar.gz .
+RUN R CMD INSTALL cyjShiny_1.0.16.tar.gz
 COPY kengoShiny.R .
 COPY tbls-curated-v2.RData .
 COPY kengo-style.js .

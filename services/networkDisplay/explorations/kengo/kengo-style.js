@@ -4,10 +4,10 @@
       "text-halign":"center",
       "content": "data(name)",
       "border-color":"black","border-width":"1px",
-       "width": 30,
-       "height": 30,
-       "background-color": "white",
-      "font-size":"8px"}},
+      "width": "mapData(degree, 0, 20, 20, 100)",
+      "height": "mapData(degree, 0, 20, 20, 100)",
+      "background-color": "white",
+      "font-size":"12px"}},
 
    {"selector": "node[type='gene']", "css": {
       "shape": "roundrectangle",

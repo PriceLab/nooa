@@ -1,0 +1,23 @@
+<head>
+  <style> body { margin: 0; } </style>
+
+  <script src="http://unpkg.com/3d-force-graph"></script>
+  <script src="network.json"></script>
+</head>
+
+<body>
+  <div id="3d-graph"></div>
+
+  <script>
+
+    const Graph = ForceGraph3D()
+     (document.getElementById('3d-graph'))
+      .graphData(data)
+      .nodeLabel('id')
+      .nodeAutoColorBy("group")
+      .linkAutoColorBy("value")
+      .linkOpacity(1.0);
+    
+
+  </script>
+</body>

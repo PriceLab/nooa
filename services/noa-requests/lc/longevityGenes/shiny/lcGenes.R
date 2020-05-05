@@ -8,7 +8,7 @@ tbl.summary <- get(load("tbl.summary.252x3.RData"))
 tbl.summary <- tbl.summary[, c("Gene_Symbol", "speciesCount", "HsOrtholog_Gene_ID")]
 #----------------------------------------------------------------------------------------------------
 ui <- fluidPage(
-   titlePanel("Longevity-associated Genes, Across Species"),
+   titlePanel("Longevity-associated Genes & Homologies"),
    fluidRow(wellPanel(
        selectInput("selectDestination",
                    label="Table selection goes to",
@@ -26,6 +26,8 @@ ui <- fluidPage(
 
 #----------------------------------------------------------------------------------------------------
 server <- function(session, input, output) {
+
+   reactiveInputs <- reactiveValues(gene="", destination="")
 
    output$table <- DT::renderDataTable({
        DT::datatable(tbl.summary,
@@ -45,47 +47,42 @@ server <- function(session, input, output) {
                          "HomoloGene" = "homoloGeneTab")
        updateTabsetPanel(session, "lcGenesTabs", selected=tabName)
        printf("send %s to %s", gene, destination)
+       reactiveInputs$gene <- gene
+       reactiveInputs$destination <- destination
        }) # observe row selection event
 
-    output$NOgeneCardsDisplay <- renderUI({
-       tableRow <- input$table_rows_selected
-       selectDestination <- isolate(input$selectDestination)
-       goi <- tbl.summary[tableRow, "Gene_Symbol"]
-       printf("selectedTableRow: %d", tableRow)
-       printf("goi: %s", goi)
-       printf("selectDestination: %s", selectDestination)
-       if(selectDestination == "GeneCards"){
-          printf("asking for tab raise");
-          updateTabsetPanel(session, "lcGenesTabs", selected="geneCardTab")
-          uri <- switch(selectDestination,
-                      "HomoloGene" = sprintf("https://www.ncbi.nlm.nih.gov/homologene/?term=%s", goi),
-                      "GeneCards"  = sprintf("https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s", goi)
-                      )
-          printf("uri: %s", uri)
-          my_test <- tags$iframe(src=uri, height=1000, width="100%")
-          my_test
-          }
-       })
 
-    output$NOhomologeneDisplay <- renderUI({
-       tableRow <- input$table_rows_selected
-       selectDestination <- isolate(input$selectDestination)
-       goi <- tbl.summary[tableRow, "Gene_Symbol"]
-       printf("selectedTableRow: %d", tableRow)
+    output$geneCardsDisplay <- renderUI({
+       goi <- reactiveInputs$gene
+       doi <- reactiveInputs$destination
+       printf("--- rendering geneCardsDisplay")
        printf("goi: %s", goi)
-       printf("selectDestination: %s", selectDestination)
-       if(selectDestination == "HomoloGene"){
+       printf("doi: %s", doi)
+       if(doi == "GeneCards"){
+          uri <- sprintf("https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s", goi)
+          printf("uri: %s", uri)
+          htmlText <- tags$iframe(src=uri, height=1000, width="100%")
+          htmlText
+          }
+       }) # geneCardsDisplay
+
+    output$homologeneDisplay <- renderUI({
+       goi <- reactiveInputs$gene
+       doi <- reactiveInputs$destination
+       printf("--- rendering homologeneDisplay")
+       printf("goi: %s", goi)
+       printf("doi: %s", doi)
+       if(doi == "HomoloGene"){
           uri <- sprintf("https://www.ncbi.nlm.nih.gov/homologene/?term=%s", goi)
           printf("uri: %s", uri)
-          my_test <- tags$iframe(src=uri, height=1000, width="100%")
-          updateTabsetPanel(session, "lcGenesTabs", selected="GeneCard")
-          my_test
+          htmlText <- tags$iframe(src=uri, height=1000, width="100%")
+          htmlText
           }
-      })
+       }) # homologeneDisplay
 
 
    } # server
 
 #----------------------------------------------------------------------------------------------------
-runApp(shinyApp(ui=ui, server=server), port=9999)
+shinyApp(ui=ui, server=server)
 

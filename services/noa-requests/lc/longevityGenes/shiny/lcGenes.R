@@ -36,50 +36,52 @@ server <- function(session, input, output) {
                      class='nowrap display')
       })
 
-   # observeEvent(input$table_rows_selected, {
-   #  selectedTableRow <- isolate(input$table_rows_selected)
-      #output$rowCountTextOutput <- renderText(sprintf("row %d", selectedTableRow))
-   #   printf("row click!");
-   #   printf("selectedTableRow: %d", selectedTableRow)
+    observeEvent(input$table_rows_selected, {
+       selectedTableRow <- isolate(input$table_rows_selected)
+       gene <- tbl.summary[selectedTableRow, "Gene_Symbol"]
+       destination <- isolate(input$selectDestination)
+       tabName <- switch(destination,
+                         "GeneCards" = "geneCardTab",
+                         "HomoloGene" = "homoloGeneTab")
+       updateTabsetPanel(session, "lcGenesTabs", selected=tabName)
+       printf("send %s to %s", gene, destination)
+       }) # observe row selection event
 
-      #output$geneCardsDisplay <-HTML(readLines('http://www.google.com'))
-    #  }) # observe row selection event
-
-  output$geneCardsDisplay <- renderUI({
-    tableRow <- input$table_rows_selected
-    selectDestination <- isolate(input$selectDestination)
-    goi <- tbl.summary[tableRow, "Gene_Symbol"]
-    printf("selectedTableRow: %d", tableRow)
-    printf("goi: %s", goi)
-    printf("selectDestination: %s", selectDestination)
-    if(selectDestination == "GeneCards"){
-        printf("asking for tab raise");
-        updateTabsetPanel(session, "lcGenesTabs", selected="geneCardTab")
-        uri <- switch(selectDestination,
+    output$NOgeneCardsDisplay <- renderUI({
+       tableRow <- input$table_rows_selected
+       selectDestination <- isolate(input$selectDestination)
+       goi <- tbl.summary[tableRow, "Gene_Symbol"]
+       printf("selectedTableRow: %d", tableRow)
+       printf("goi: %s", goi)
+       printf("selectDestination: %s", selectDestination)
+       if(selectDestination == "GeneCards"){
+          printf("asking for tab raise");
+          updateTabsetPanel(session, "lcGenesTabs", selected="geneCardTab")
+          uri <- switch(selectDestination,
                       "HomoloGene" = sprintf("https://www.ncbi.nlm.nih.gov/homologene/?term=%s", goi),
                       "GeneCards"  = sprintf("https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s", goi)
                       )
-        printf("uri: %s", uri)
-        my_test <- tags$iframe(src=uri, height=1000, width="100%")
-        my_test
-        }
-    })
+          printf("uri: %s", uri)
+          my_test <- tags$iframe(src=uri, height=1000, width="100%")
+          my_test
+          }
+       })
 
-  output$homologeneDisplay <- renderUI({
-    tableRow <- input$table_rows_selected
-    selectDestination <- isolate(input$selectDestination)
-    goi <- tbl.summary[tableRow, "Gene_Symbol"]
-    printf("selectedTableRow: %d", tableRow)
-    printf("goi: %s", goi)
-    printf("selectDestination: %s", selectDestination)
-    if(selectDestination == "HomoloGene"){
-        uri <- sprintf("https://www.ncbi.nlm.nih.gov/homologene/?term=%s", goi)
-        printf("uri: %s", uri)
-        my_test <- tags$iframe(src=uri, height=1000, width="100%")
-        updateTabsetPanel(session, "lcGenesTabs", selected="GeneCard")
-        my_test
-        }
-    })
+    output$NOhomologeneDisplay <- renderUI({
+       tableRow <- input$table_rows_selected
+       selectDestination <- isolate(input$selectDestination)
+       goi <- tbl.summary[tableRow, "Gene_Symbol"]
+       printf("selectedTableRow: %d", tableRow)
+       printf("goi: %s", goi)
+       printf("selectDestination: %s", selectDestination)
+       if(selectDestination == "HomoloGene"){
+          uri <- sprintf("https://www.ncbi.nlm.nih.gov/homologene/?term=%s", goi)
+          printf("uri: %s", uri)
+          my_test <- tags$iframe(src=uri, height=1000, width="100%")
+          updateTabsetPanel(session, "lcGenesTabs", selected="GeneCard")
+          my_test
+          }
+      })
 
 
    } # server

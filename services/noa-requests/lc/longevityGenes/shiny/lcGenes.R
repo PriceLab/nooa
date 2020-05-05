@@ -53,9 +53,9 @@ server <- function(session, input, output) {
 
 
     output$geneCardsDisplay <- renderUI({
+       printf("--- rendering geneCardsDisplay")
        goi <- reactiveInputs$gene
        doi <- reactiveInputs$destination
-       printf("--- rendering geneCardsDisplay")
        printf("goi: %s", goi)
        printf("doi: %s", doi)
        if(doi == "GeneCards"){
@@ -67,9 +67,9 @@ server <- function(session, input, output) {
        }) # geneCardsDisplay
 
     output$homologeneDisplay <- renderUI({
+       printf("--- rendering homologeneDisplay")
        goi <- reactiveInputs$gene
        doi <- reactiveInputs$destination
-       printf("--- rendering homologeneDisplay")
        printf("goi: %s", goi)
        printf("doi: %s", doi)
        if(doi == "HomoloGene"){
@@ -84,5 +84,6 @@ server <- function(session, input, output) {
    } # server
 
 #----------------------------------------------------------------------------------------------------
-shinyApp(ui=ui, server=server)
+runApp(shinyApp(ui=ui, server=server), port=9999)
+
 

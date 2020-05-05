@@ -6,6 +6,7 @@ printf = function (...) print (noquote (sprintf (...)))
 #----------------------------------------------------------------------------------------------------
 tbl.summary <- get(load("tbl.summary.252x3.RData"))
 tbl.summary <- tbl.summary[, c("Gene_Symbol", "speciesCount", "HsOrtholog_Gene_ID")]
+# https://docs.google.com/document/d/1Qwj9-vj8Q7b0GWLCs5UmHirQqGkejMex5w11E-CXLvU/edit?usp=sharing
 #----------------------------------------------------------------------------------------------------
 ui <- fluidPage(
    titlePanel("Longevity-associated Genes & Homologies"),
@@ -20,7 +21,9 @@ ui <- fluidPage(
        tabPanel(title="GeneCard", value="geneCardTab",
                 wellPanel(htmlOutput("geneCardsDisplay"))),
        tabPanel(title="HomoloGene", value="homoloGeneTab",
-                wellPanel(htmlOutput("homologeneDisplay")))),
+                wellPanel(htmlOutput("homologeneDisplay"))),
+       tabPanel(title="Notes & Comments", value="notesAndCommentsTab",
+                wellPanel(htmlOutput("notesAndCommentsDisplay")))),
    style="margin: 10px; margin-top: 5px;"
    ) # fluidPage
 
@@ -80,10 +83,17 @@ server <- function(session, input, output) {
           }
        }) # homologeneDisplay
 
+    output$notesAndCommentsDisplay <- renderUI({
+       printf("--- notesAndComment")
+       uri <- sprintf("https://docs.google.com/document/d/1Qwj9-vj8Q7b0GWLCs5UmHirQqGkejMex5w11E-CXLvU/edit?usp=sharing")
+       printf("uri: %s", uri)
+       htmlText <- tags$iframe(src=uri, height=1000, width="100%")
+       htmlText
+       }) # notesAndCommentsDisplay
 
    } # server
 
 #----------------------------------------------------------------------------------------------------
-runApp(shinyApp(ui=ui, server=server), port=9999)
+shinyApp(ui=ui, server=server)
 
 

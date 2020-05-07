@@ -30,7 +30,8 @@ ui <- fluidPage(
        tabPanel(title="PubMed", value="pubmedTab",
                 wellPanel(htmlOutput("pubmedDisplay"))),
        tabPanel(title="Notes & Comments", value="notesAndCommentsTab",
-                wellPanel(htmlOutput("notesAndCommentsDisplay")))),
+                wellPanel(htmlOutput("notesAndCommentsDisplay"))),
+       tabPanel("Help", includeHTML("help.html"))),
    style="margin: 10px; margin-top: 5px;"
    ) # fluidPage
 

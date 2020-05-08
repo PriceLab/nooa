@@ -128,9 +128,10 @@ server <- function(session, input, output) {
           printf("doi: %s", doi)
           uri <- sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", pmids)
           printf("uri: %s", uri)
-          browseURL(sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", "25677554"))
-          #htmlText <- tags$iframe(src=uri, height=1000, width="100%")
-          "NCBI restrictions required us to open a new browser page"
+          #browseURL(sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", "25677554"))
+          htmlText <- tags$iframe(src=uri, height=1000, width="100%")
+          #"NCBI restrictions required us to open a new browser page"
+          htmlText
           }
        }) # pubmedDisplay
 

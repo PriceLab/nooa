@@ -59,6 +59,8 @@ server <- function(session, input, output) {
        selectedTableRow <- isolate(input$table_rows_selected)
        gene <- tbl.summary[selectedTableRow, "Gene"]
        pubmedIds <- tbl.summary[selectedTableRow, "PMID"]
+          # but see https://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/
+          # https://github.com/niutech/x-frame-bypass
        if(!grepl(",", pubmedIds))
            pubmedIds <- sprintf("%s, %s", pubmedIds, pubmedIds)
        destination <- isolate(input$selectDestination)
@@ -112,12 +114,11 @@ server <- function(session, input, output) {
        if(doi == "PubMed"){
           uri <- sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", pmids)
           printf("uri: %s", uri)
-          htmlText <- tags$iframe(src=uri, height=1000, width="100%")
-          htmlText
+          browseURL(sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", "25677554"))
+          #htmlText <- tags$iframe(src=uri, height=1000, width="100%")
+          "NCBI restrictions required us to open a new browser page"
           }
-       }) # homologeneDisplay
-
-
+       }) # pubmedDisplay
 
     output$notesAndCommentsDisplay <- renderUI({
        printf("--- notesAndComment")

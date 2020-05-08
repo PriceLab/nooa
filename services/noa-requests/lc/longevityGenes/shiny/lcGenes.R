@@ -6,11 +6,11 @@ options(warn=2)  # warning are turned into errors
 #----------------------------------------------------------------------------------------------------
 printf = function (...) print (noquote (sprintf (...)))
 #----------------------------------------------------------------------------------------------------
-#tbl.summary <- get(load("tbl.summary.252x3.RData"))
-#tbl.summary <- tbl.summary[, c("Gene_Symbol", "speciesCount", "HsOrtholog_Gene_ID")]
+tbl.summary <- get(load("tbl.summary.1010x6.RData"))
+tbl.summary <- tbl.summary[, c("Gene", "Longevity", "Feature", "Function", "PMID")]
+colnames(tbl.summary)[3] <- "Longevity Feature"
 
-tbl.summary <- get(load("tbl.summary.1010x5.RData"))
-tbl.summary <- tbl.summary[, c("Gene", "Longevity", "Function", "Assay", "PMID")]
+tbl.orthologsBySpecies <- get(load("tbl.orthologsBySpecies.9999x4.RData"))
 # https://docs.google.com/document/d/1Qwj9-vj8Q7b0GWLCs5UmHirQqGkejMex5w11E-CXLvU/edit?usp=sharing
 #----------------------------------------------------------------------------------------------------
 ui <- fluidPage(
@@ -18,17 +18,19 @@ ui <- fluidPage(
    fluidRow(wellPanel(
        selectInput("selectDestination",
                    label="Table selection goes to",
-                   c("NA", "HomoloGene", "GeneCards", "PubMed")),
+                   c("NA", "HomoloGene", "GeneCards", "PubMed", "Orthologs", "Notes")),
        style="padding-bottom:0px; float: right; width: 200px;")),
    tabsetPanel(type="tabs", id="lcGenesTabs",
        tabPanel(title="By Gene", value="byGeneTab",
-                wellPanel(DTOutput("table"), style="margin-top:5px;")),
+                wellPanel(DTOutput("geneTable"), style="margin-top:5px;")),
        tabPanel(title="GeneCard", value="geneCardTab",
                 wellPanel(htmlOutput("geneCardsDisplay"))),
        tabPanel(title="HomoloGene", value="homoloGeneTab",
                 wellPanel(htmlOutput("homologeneDisplay"))),
        tabPanel(title="PubMed", value="pubmedTab",
                 wellPanel(htmlOutput("pubmedDisplay"))),
+       tabPanel(title="Orthologs", value="orthologsTab",
+                wellPanel(DTOutput("orthologsTableDisplay"), style="margin-top:5px;")),
        tabPanel(title="Notes & Comments", value="notesAndCommentsTab",
                 wellPanel(htmlOutput("notesAndCommentsDisplay"))),
        tabPanel("Help", includeHTML("help.html"))),
@@ -40,7 +42,7 @@ server <- function(session, input, output) {
 
    reactiveInputs <- reactiveValues(gene="", destination="", pmid="")
 
-   output$table <- DT::renderDataTable({
+   output$geneTable <- DT::renderDataTable({
        DT::datatable(tbl.summary,
                      rownames=FALSE,
                      options=list(pageLength=20,
@@ -55,63 +57,75 @@ server <- function(session, input, output) {
 
       })
 
-    observeEvent(input$table_rows_selected, {
-       selectedTableRow <- isolate(input$table_rows_selected)
-       gene <- tbl.summary[selectedTableRow, "Gene"]
-       pubmedIds <- tbl.summary[selectedTableRow, "PMID"]
-          # but see https://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/
-          # https://github.com/niutech/x-frame-bypass
-       if(!grepl(",", pubmedIds))
-           pubmedIds <- sprintf("%s, %s", pubmedIds, pubmedIds)
-       destination <- isolate(input$selectDestination)
-       tabName <- switch(destination,
-                         "GeneCards" = "geneCardTab",
-                         "HomoloGene" = "homoloGeneTab",
-                         "PubMed" = "pubmedTab")
-       updateTabsetPanel(session, "lcGenesTabs", selected=tabName)
-       printf("send %s to %s", gene, destination)
-       reactiveInputs$gene <- gene
-       reactiveInputs$destination <- destination
-       reactiveInputs$pmid <- pubmedIds
-       }) # observe row selection event
+   observeEvent(input$geneTable_rows_selected, {
+      selectedTableRow <- isolate(input$geneTable_rows_selected)
+      gene <- tbl.summary[selectedTableRow, "Gene"]
+      printf("--- geneTable_rows_selected: %s", gene);
+      pubmedIds <- tbl.summary[selectedTableRow, "PMID"]
+         # but see https://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/
+         # https://github.com/niutech/x-frame-bypass
+      if(!grepl(",", pubmedIds))
+          pubmedIds <- sprintf("%s, %s", pubmedIds, pubmedIds)
+      destination <- isolate(input$selectDestination)
+      tabName <- switch(destination,
+                        "GeneCards" = "geneCardTab",
+                        "HomoloGene" = "homoloGeneTab",
+                        "PubMed" = "pubmedTab",
+                        "Orthologs" = "orthologsTab")
+      updateTabsetPanel(session, "lcGenesTabs", selected=tabName)
+      printf("send %s to %s", gene, destination)
+      reactiveInputs$gene <- gene
+      reactiveInputs$destination <- destination
+      reactiveInputs$pmid <- pubmedIds
+      }) # observe row selection event
 
+    output$orthologsTableDisplay <- DT::renderDataTable({
+      goi <- reactiveInputs$gene
+      if(reactiveInputs$destination == "Orthologs"){
+         printf("--- rendering orthologsTableDisplay")
+         printf("goi: %s", goi)
+         printf("subset tbl.orthologsBySpecies by %s", goi)
+         tbl.orthoSub <- subset(tbl.orthologsBySpecies, HsOrtholog_Gene_Symbol==goi)
+         DT::datatable(tbl.orthoSub, rownames=FALSE, options=list(paging=FALSE))
+         } # if Orthologs
+      }) # orthologsDisplay
 
     output$geneCardsDisplay <- renderUI({
-       printf("--- rendering geneCardsDisplay")
-       goi <- reactiveInputs$gene
-       doi <- reactiveInputs$destination
-       printf("goi: %s", goi)
-       printf("doi: %s", doi)
-       if(doi == "GeneCards"){
-          uri <- sprintf("https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s", goi)
-          printf("uri: %s", uri)
-          htmlText <- tags$iframe(src=uri, height=1000, width="100%")
-          htmlText
-          }
+      if(reactiveInputs$destination == "GeneCards"){
+         printf("--- rendering geneCardsDisplay")
+         goi <- reactiveInputs$gene
+         doi <- reactiveInputs$destination
+         printf("goi: %s", goi)
+         printf("doi: %s", doi)
+         uri <- sprintf("https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s", goi)
+         printf("uri: %s", uri)
+         htmlText <- tags$iframe(src=uri, height=1000, width="100%")
+         htmlText
+         }
        }) # geneCardsDisplay
 
     output$homologeneDisplay <- renderUI({
-       printf("--- rendering homologeneDisplay")
-       goi <- reactiveInputs$gene
-       doi <- reactiveInputs$destination
-       printf("goi: %s", goi)
-       printf("doi: %s", doi)
-       if(doi == "HomoloGene"){
+       if(reactiveInputs$destination == "HomoloGene"){
+          printf("--- rendering homologeneDisplay")
+          goi <- reactiveInputs$gene
+          doi <- reactiveInputs$destination
+          printf("goi: %s", goi)
+          printf("doi: %s", doi)
           uri <- sprintf("https://www.ncbi.nlm.nih.gov/homologene/?term=%s", goi)
           printf("uri: %s", uri)
           htmlText <- tags$iframe(src=uri, height=1000, width="100%")
           htmlText
-          }
+          } # HomoloGene
        }) # homologeneDisplay
 
 
     output$pubmedDisplay <- renderUI({
-       printf("--- rendering pubmedDisplay")
-       pmids <- reactiveInputs$pmid
-       doi <- reactiveInputs$destination
-       printf("pmids: %s", pmids)
-       printf("doi: %s", doi)
-       if(doi == "PubMed"){
+       if(reactiveInputs$destination == "PubMed"){
+          printf("--- rendering pubmedDisplay")
+          pmids <- reactiveInputs$pmid
+          doi <- reactiveInputs$destination
+          printf("pmids: %s", pmids)
+          printf("doi: %s", doi)
           uri <- sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", pmids)
           printf("uri: %s", uri)
           browseURL(sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", "25677554"))
@@ -131,7 +145,9 @@ server <- function(session, input, output) {
    } # server
 
 #----------------------------------------------------------------------------------------------------
-runApp(shinyApp(ui=ui, server=server), port=9003)
+#runApp(shinyApp(ui=ui, server=server), port=9003)
+shinyApp(ui=ui, server=server)
+
 
 
 

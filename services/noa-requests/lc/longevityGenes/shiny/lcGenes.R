@@ -3,6 +3,7 @@
 library(shiny)
 library(DT)
 options(warn=2)  # warning are turned into errors
+library(shinyBS)
 #----------------------------------------------------------------------------------------------------
 printf = function (...) print (noquote (sprintf (...)))
 #----------------------------------------------------------------------------------------------------
@@ -11,6 +12,34 @@ tbl.summary <- tbl.summary[, c("Gene", "Longevity", "Feature", "Function", "PMID
 colnames(tbl.summary)[3] <- "Longevity Feature"
 
 tbl.orthologsBySpecies <- get(load("tbl.orthologsBySpecies.9999x4.RData"))
+
+x <- "selectDestination"
+x <- "DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollaHead > div > table > thead > tr > th:nth-child(2)"
+
+
+x.sel <- "DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)"
+x.text <- "foo"
+
+
+tt <- list(longevityTab=list(selector="DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)",
+                             text=paste0('[+-] causal evidence<br>',
+                                        '[+-]? correlational only<br>',
+                                         '+/- direction unknown, causal<br>',
+                                         '+/-? unknown, correlational')))
+#                         'based on the causality evidence, respectively (ex. Gene overexpression or knockout',
+#                         'induces extended lifespan). “+?” or “-?” indicates “Gene_Name” is a positive or negative',
+#                         'regulator candidate for longevity based on the correlation/association evidence, respectively',
+#                         '(ex. The expression level of “Gene_Name” is correlated with maximal lifespan among cross-',
+#                         'species). “+/-?” indicates “Gene_Name” is a direction-unknown regulator candidate for',
+#                         'longevity based on the correlation/association evidence. “N/A” indicates “Gene_Name” has',
+#                         'unknown function in the longevity context, which may be just associated with cellular',
+#                         'senescence (a few entries for now). Examples: (1) In the case of ACOX1, a paper said that',
+#                         'the expression level of ACOX1 is correlated with the gestation period, which is also known',
+#                         'to be correlated with maximal lifespan, among 33 mammalian species. Therefore, “-?” is',
+#                         'assigned in the ACOX1 entry. (2) A paper reported that GHR knockout mice showed',
+#                         'extended lifespan, therefore assigned “-” in the GHR entry.')))
+
+
 # https://docs.google.com/document/d/1Qwj9-vj8Q7b0GWLCs5UmHirQqGkejMex5w11E-CXLvU/edit?usp=sharing
 #----------------------------------------------------------------------------------------------------
 ui <- fluidPage(
@@ -19,6 +48,8 @@ ui <- fluidPage(
        selectInput("selectDestination",
                    label="Table selection goes to",
                    c("NA", "HomoloGene", "GeneCards", "PubMed", "Orthologs", "Notes")),
+       #bsTooltip(x.sel, x.text, "top", options = list(container = "body")),
+       with(tt[["longevityTab"]], bsTooltip(selector, text, "bottom", options = list(container = "body", html=TRUE))),
        style="padding-bottom:0px; float: right; width: 200px;")),
    tabsetPanel(type="tabs", id="lcGenesTabs",
        tabPanel(title="By Gene", value="byGeneTab",
@@ -41,6 +72,9 @@ ui <- fluidPage(
 server <- function(session, input, output) {
 
    reactiveInputs <- reactiveValues(gene="", destination="", pmid="")
+
+   addTooltip(session, id="selectDestination", title="destination",
+               placement = "bottom", trigger = "hover",   options = NULL)
 
    output$geneTable <- DT::renderDataTable({
        DT::datatable(tbl.summary,
@@ -146,8 +180,8 @@ server <- function(session, input, output) {
    } # server
 
 #----------------------------------------------------------------------------------------------------
-#runApp(shinyApp(ui=ui, server=server), port=9003)
-shinyApp(ui=ui, server=server)
+runApp(shinyApp(ui=ui, server=server), port=9003)
+#shinyApp(ui=ui, server=server)
 
 
 

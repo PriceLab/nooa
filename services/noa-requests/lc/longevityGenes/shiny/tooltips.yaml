@@ -1,0 +1,31 @@
+Gene:
+   selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(1)
+   text: ['Human Gene Symbol (HGNC)']
+   location: bottom
+
+Longevity:
+   selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)
+   text: ['<h5>Code</h5>',
+          '[+-] causal evidence<br>',
+          '[+-]? correlational only<br>',
+          '+/- direction unknown, causal<br>',
+           '+/-? unknown, correlational']
+   location: bottom
+
+LongevityFeature:
+   selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(3)
+   text: ['The attribute or behavior of this<br>',
+          'gene indicating a role in longevity']
+   location: bottom
+
+Function:
+   selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(4)
+   text: ['Molecular function of this gene<br>',
+          'as described in the references']
+   location: bottom
+
+
+PMID:
+   selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(5)
+   text: ['PubMed ID for references']
+   location: bottom

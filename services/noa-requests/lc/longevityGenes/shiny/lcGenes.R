@@ -4,9 +4,20 @@ library(shiny)
 library(DT)
 options(warn=2)  # warning are turned into errors
 library(shinyBS)
+library(yaml)
 #----------------------------------------------------------------------------------------------------
 printf = function (...) print (noquote (sprintf (...)))
 #----------------------------------------------------------------------------------------------------
+tooltips <- yaml.load_file("tooltips.yaml")
+for(i in 1:length(tooltips)) tooltips[[i]]$text <- paste(tooltips[[i]]$text, collapse=" ")
+printf("length of tooltips read: %d", length(tooltips))
+# tt <- list(longevityTab=list(selector="DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)",
+#                             text=paste0('[+-] causal evidence<br>',
+#                                        '[+-]? correlational only<br>',
+#                                         '+/- direction unknown, causal<br>',
+#                                         '+/-? unknown, correlational')))
+
+
 tbl.summary <- get(load("tbl.summary.1010x6.RData"))
 tbl.summary <- tbl.summary[, c("Gene", "Longevity", "Feature", "Function", "PMID")]
 colnames(tbl.summary)[3] <- "Longevity Feature"
@@ -21,11 +32,11 @@ x.sel <- "DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTa
 x.text <- "foo"
 
 
-tt <- list(longevityTab=list(selector="DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)",
-                             text=paste0('[+-] causal evidence<br>',
-                                        '[+-]? correlational only<br>',
-                                         '+/- direction unknown, causal<br>',
-                                         '+/-? unknown, correlational')))
+#tt <- list(longevityTab=list(selector="DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)",
+#                             text=paste0('[+-] causal evidence<br>',
+#                                        '[+-]? correlational only<br>',
+#                                         '+/- direction unknown, causal<br>',
+#                                         '+/-? unknown, correlational')))
 #                         'based on the causality evidence, respectively (ex. Gene overexpression or knockout',
 #                         'induces extended lifespan). “+?” or “-?” indicates “Gene_Name” is a positive or negative',
 #                         'regulator candidate for longevity based on the correlation/association evidence, respectively',
@@ -43,13 +54,18 @@ tt <- list(longevityTab=list(selector="DataTables_Table_0_wrapper > div > div:nt
 # https://docs.google.com/document/d/1Qwj9-vj8Q7b0GWLCs5UmHirQqGkejMex5w11E-CXLvU/edit?usp=sharing
 #----------------------------------------------------------------------------------------------------
 ui <- fluidPage(
+   includeCSS("lcGenes.css"),
    titlePanel("Longevity-associated Genes & Homologies"),
    fluidRow(wellPanel(
        selectInput("selectDestination",
                    label="Table selection goes to",
                    c("NA", "HomoloGene", "GeneCards", "PubMed", "Orthologs", "Notes")),
-       #bsTooltip(x.sel, x.text, "top", options = list(container = "body")),
-       with(tt[["longevityTab"]], bsTooltip(selector, text, "bottom", options = list(container = "body", html=TRUE))),
+       with(tooltips[[1]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       with(tooltips[[2]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       with(tooltips[[3]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       with(tooltips[[4]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       with(tooltips[[5]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       # with(tt[["longevityTab"]], bsTooltip(selector, text, "bottom", options = list(container = "body", html=TRUE))),
        style="padding-bottom:0px; float: right; width: 200px;")),
    tabsetPanel(type="tabs", id="lcGenesTabs",
        tabPanel(title="By Gene", value="byGeneTab",
@@ -79,14 +95,14 @@ server <- function(session, input, output) {
    output$geneTable <- DT::renderDataTable({
        DT::datatable(tbl.summary,
                      rownames=FALSE,
-                     options=list(pageLength=20,
+                     options=list(pageLength=10,
                                   dom='<lfip<t>>',
                                   scrollX=TRUE,
                                   autoWidth=TRUE,
                                   columnDefs=list(list(width="10%", targets=c(0,1)),
                                                   list(width="40%", targets=c(2,3)),
                                                   list(width="10%", targets=4)),
-                                  paging=FALSE),
+                                  paging=TRUE),
                      selection="single")
 
       })

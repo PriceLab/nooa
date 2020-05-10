@@ -23,34 +23,7 @@ tbl.summary <- tbl.summary[, c("Gene", "Longevity", "Feature", "Function", "PMID
 colnames(tbl.summary)[3] <- "Longevity Feature"
 
 tbl.orthologsBySpecies <- get(load("tbl.orthologsBySpecies.9999x4.RData"))
-
-x <- "selectDestination"
-x <- "DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollaHead > div > table > thead > tr > th:nth-child(2)"
-
-
-x.sel <- "DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)"
-x.text <- "foo"
-
-
-#tt <- list(longevityTab=list(selector="DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)",
-#                             text=paste0('[+-] causal evidence<br>',
-#                                        '[+-]? correlational only<br>',
-#                                         '+/- direction unknown, causal<br>',
-#                                         '+/-? unknown, correlational')))
-#                         'based on the causality evidence, respectively (ex. Gene overexpression or knockout',
-#                         'induces extended lifespan). “+?” or “-?” indicates “Gene_Name” is a positive or negative',
-#                         'regulator candidate for longevity based on the correlation/association evidence, respectively',
-#                         '(ex. The expression level of “Gene_Name” is correlated with maximal lifespan among cross-',
-#                         'species). “+/-?” indicates “Gene_Name” is a direction-unknown regulator candidate for',
-#                         'longevity based on the correlation/association evidence. “N/A” indicates “Gene_Name” has',
-#                         'unknown function in the longevity context, which may be just associated with cellular',
-#                         'senescence (a few entries for now). Examples: (1) In the case of ACOX1, a paper said that',
-#                         'the expression level of ACOX1 is correlated with the gestation period, which is also known',
-#                         'to be correlated with maximal lifespan, among 33 mammalian species. Therefore, “-?” is',
-#                         'assigned in the ACOX1 entry. (2) A paper reported that GHR knockout mice showed',
-#                         'extended lifespan, therefore assigned “-” in the GHR entry.')))
-
-
+#----------------------------------------------------------------------------------------------------
 # https://docs.google.com/document/d/1Qwj9-vj8Q7b0GWLCs5UmHirQqGkejMex5w11E-CXLvU/edit?usp=sharing
 #----------------------------------------------------------------------------------------------------
 ui <- fluidPage(
@@ -65,12 +38,11 @@ ui <- fluidPage(
        with(tooltips[[3]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[4]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[5]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
-       # with(tt[["longevityTab"]], bsTooltip(selector, text, "bottom", options = list(container = "body", html=TRUE))),
        style="padding-bottom:0px; float: right; width: 200px;")),
    tabsetPanel(type="tabs", id="lcGenesTabs",
        tabPanel(title="By Gene", value="byGeneTab",
                 wellPanel(DTOutput("geneTable"), style="margin-top:5px;")),
-       tabPanel(title="GeneCard", value="geneCardTab",
+       tabPanel(title="GeneCard", value="geneCardsTab",
                 wellPanel(htmlOutput("geneCardsDisplay"))),
        tabPanel(title="HomoloGene", value="homoloGeneTab",
                 wellPanel(htmlOutput("homologeneDisplay"))),
@@ -87,7 +59,15 @@ ui <- fluidPage(
 #----------------------------------------------------------------------------------------------------
 server <- function(session, input, output) {
 
-   reactiveInputs <- reactiveValues(gene="", destination="", pmid="")
+   reactiveInputs <- reactiveValues(gene="",
+                                    destination="",
+                                    pmid="",
+                                    homogeneQuery=FALSE,
+                                    geneCardsQuery=FALSE,
+                                    pubmedQuery=FALSE,
+                                    orthologsQuery=FALSE,
+                                    notesQuery=FALSE
+                                    )
 
    addTooltip(session, id="selectDestination", title="destination",
                placement = "bottom", trigger = "hover",   options = NULL)
@@ -116,12 +96,33 @@ server <- function(session, input, output) {
          # https://github.com/niutech/x-frame-bypass
       if(!grepl(",", pubmedIds))
           pubmedIds <- sprintf("%s, %s", pubmedIds, pubmedIds)
+      printf("pubmedIDs: %s", pubmedIds)
       destination <- isolate(input$selectDestination)
-      tabName <- switch(destination,
-                        "GeneCards" = "geneCardTab",
-                        "HomoloGene" = "homoloGeneTab",
-                        "PubMed" = "pubmedTab",
-                        "Orthologs" = "orthologsTab")
+      printf("destination: %s", destination)
+
+      tabName <- "byGeneTab"
+      if(destination == "GeneCards"){
+         print(1)
+         tabName <- "geneCardsTab"
+         print(2)
+         reactiveInputs$geneCardsQuery <- TRUE
+         print(3)
+         }
+
+      if(destination == "HomoloGene"){
+         print(4)
+         tabName <- "homoloGeneTab"
+         print(5)
+         reactiveInputs$homologeneQuery <- TRUE
+         print(6)
+         }
+
+
+      #switch(destination,
+      #       "GeneCards" = {
+      #       "HomoloGene" = {reactiveValues$homoloGeneQuery <- TRUE},
+      #       "PubMed" = {reactiveValues$pubmedQuery <- TRUE},
+      #       "Orthologs" = {reactiveValues$orthologsQuery <- TRUE})
       updateTabsetPanel(session, "lcGenesTabs", selected=tabName)
       printf("send %s to %s", gene, destination)
       reactiveInputs$gene <- gene
@@ -130,8 +131,8 @@ server <- function(session, input, output) {
       }) # observe row selection event
 
     output$orthologsTableDisplay <- DT::renderDataTable({
-      goi <- reactiveInputs$gene
-      if(reactiveInputs$destination == "Orthologs"){
+       goi <- isolate(reactiveInputs$gene)
+       if(reactiveInputs$orthologQuery){
          printf("--- rendering orthologsTableDisplay")
          printf("goi: %s", goi)
          printf("subset tbl.orthologsBySpecies by %s", goi)
@@ -141,12 +142,9 @@ server <- function(session, input, output) {
       }) # orthologsDisplay
 
     output$geneCardsDisplay <- renderUI({
-      if(reactiveInputs$destination == "GeneCards"){
-         printf("--- rendering geneCardsDisplay")
-         goi <- reactiveInputs$gene
-         doi <- reactiveInputs$destination
-         printf("goi: %s", goi)
-         printf("doi: %s", doi)
+      goi <- isolate(reactiveInputs$gene)
+      if(reactiveInputs$geneCardsQuery){
+         printf("--- rendering geneCardsDisplay %s", goi)
          uri <- sprintf("https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s", goi)
          printf("uri: %s", uri)
          htmlText <- tags$iframe(src=uri, height=1000, width="100%")

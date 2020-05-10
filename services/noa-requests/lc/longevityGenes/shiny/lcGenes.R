@@ -32,7 +32,7 @@ ui <- fluidPage(
    fluidRow(wellPanel(
        selectInput("selectDestination",
                    label="Table selection goes to",
-                   c("NA", "HomoloGene", "GeneCards", "PubMed", "Orthologs", "Notes")),
+                   c("NA", "HomoloGene", "GeneCards", "PubMed", "Orthologs")),
        with(tooltips[[1]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[2]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[3]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
@@ -40,7 +40,7 @@ ui <- fluidPage(
        with(tooltips[[5]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        style="padding-bottom:0px; float: right; width: 200px;")),
    tabsetPanel(type="tabs", id="lcGenesTabs",
-       tabPanel(title="By Gene", value="byGeneTab",
+       tabPanel(title="Gene", value="byGeneTab",
                 wellPanel(DTOutput("geneTable"), style="margin-top:5px;")),
        tabPanel(title="GeneCard", value="geneCardsTab",
                 wellPanel(htmlOutput("geneCardsDisplay"))),
@@ -66,7 +66,7 @@ server <- function(session, input, output) {
                                     geneCardsQuery=FALSE,
                                     pubmedQuery=FALSE,
                                     orthologsQuery=FALSE,
-                                    notesQuery=FALSE
+                                    notesAndCommentsQuery=FALSE
                                     )
 
    addTooltip(session, id="selectDestination", title="destination",
@@ -102,27 +102,31 @@ server <- function(session, input, output) {
 
       tabName <- "byGeneTab"
       if(destination == "GeneCards"){
-         print(1)
          tabName <- "geneCardsTab"
-         print(2)
          reactiveInputs$geneCardsQuery <- TRUE
-         print(3)
          }
 
       if(destination == "HomoloGene"){
-         print(4)
          tabName <- "homoloGeneTab"
-         print(5)
          reactiveInputs$homologeneQuery <- TRUE
-         print(6)
          }
 
+      if(destination == "PubMed"){
+         tabName <- "pubmedTab"
+         reactiveInputs$pubMedQuery <- TRUE
+         }
 
-      #switch(destination,
-      #       "GeneCards" = {
-      #       "HomoloGene" = {reactiveValues$homoloGeneQuery <- TRUE},
-      #       "PubMed" = {reactiveValues$pubmedQuery <- TRUE},
-      #       "Orthologs" = {reactiveValues$orthologsQuery <- TRUE})
+      if(destination == "Orthologs"){
+         printf("setting destination to Orthologs")
+         tabName <- "orthologsTab"
+         reactiveInputs$orthologsQuery <- TRUE
+         }
+
+      if(destination == "Notes & Comments"){
+         tabName <- "notesAndCommentsTab"
+         reactiveInputs$notesAndCommentsQuery <- TRUE
+         }
+
       updateTabsetPanel(session, "lcGenesTabs", selected=tabName)
       printf("send %s to %s", gene, destination)
       reactiveInputs$gene <- gene
@@ -132,7 +136,7 @@ server <- function(session, input, output) {
 
     output$orthologsTableDisplay <- DT::renderDataTable({
        goi <- isolate(reactiveInputs$gene)
-       if(reactiveInputs$orthologQuery){
+       if(reactiveInputs$orthologsQuery){
          printf("--- rendering orthologsTableDisplay")
          printf("goi: %s", goi)
          printf("subset tbl.orthologsBySpecies by %s", goi)
@@ -153,9 +157,9 @@ server <- function(session, input, output) {
        }) # geneCardsDisplay
 
     output$homologeneDisplay <- renderUI({
+       goi <- isolate(reactiveInputs$gene)
        if(reactiveInputs$destination == "HomoloGene"){
           printf("--- rendering homologeneDisplay")
-          goi <- reactiveInputs$gene
           doi <- reactiveInputs$destination
           printf("goi: %s", goi)
           printf("doi: %s", doi)

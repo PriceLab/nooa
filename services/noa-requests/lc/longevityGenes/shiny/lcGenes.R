@@ -202,8 +202,8 @@ server <- function(session, input, output) {
    } # server
 
 #----------------------------------------------------------------------------------------------------
-runApp(shinyApp(ui=ui, server=server), port=9003)
-# shinyApp(ui=ui, server=server)
+#runApp(shinyApp(ui=ui, server=server), port=9003)
+shinyApp(ui=ui, server=server)
 
 
 

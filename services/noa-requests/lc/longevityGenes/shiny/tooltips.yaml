@@ -12,20 +12,69 @@ Longevity:
           '+/-? unknown, correlational']
    location: bottom
 
-LongevityFeature:
-   selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(3)
-   text: ['The attribute or behavior of this<br>',
-          'gene indicating a role in longevity']
-   location: bottom
-
-Function:
-   selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(4)
-   text: ['Molecular function of this gene<br>',
-          'as described in the references']
-   location: bottom
+# LongevityFeature:
+#    selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(3)
+#    text: ['The attribute or behavior of this<br>',
+#           'gene indicating a role in longevity']
+#    location: bottom
+# 
+# Function:
+#    selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(4)
+#    text: ['Molecular function of this gene<br>',
+#           'as described in the references']
+#    location: bottom
 
 
 PMID:
-   selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(5)
+   selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(3)
    text: ['PubMed ID for references']
    location: bottom
+
+Title:
+   selector: body > div > h2
+   text: ['Title']
+   location: bottom
+   
+GeneCards:
+   selector: lcGenesTabs > li:nth-child(2) > a
+   text: ["Weizmann Institute<br>",
+          "Human Gene Database"]
+   location: bottom
+
+Homologene:
+   selector: lcGenesTabs > li:nth-child(3) > a
+   text: ["NCBI Homologene: An automated",
+          "system for constructing putative",
+	  "homology groups from the complete",
+	  "gene sets of a wide range of",
+	  "eukaryotic species."]
+   location: bottom
+
+PubMed:
+   selector: lcGenesTabs > li:nth-child(4) > a
+   text: ["NCBI MEDLINE Search Engine<br>",
+          "for biomedical and life<br>",
+	  "science literature"]
+   location: bottom
+
+Orthologs:
+    selector: lcGenesTabs > li:nth-child(5) > a
+    text: ["List of organisms<br>",
+           "with orthologous genes"]
+    location: bottom
+
+NotesAndComments:
+    selector: lcGenesTabs > li:nth-child(6) > a
+    text: ["User-supplied comments<br>",
+           "on, or additions to, any<br>",
+	   "LC gene data.<br>",
+	   "(Very rudimentary at present)"]
+    location: bottom
+
+DestinationSelector:
+   selector: #selectDestination
+   text: ["Destination tab to<br>",
+          "invoked when you select<br>",
+	  "a row in the Gene table"]
+   location: bottom
+

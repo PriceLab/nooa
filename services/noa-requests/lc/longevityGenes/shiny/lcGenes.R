@@ -11,16 +11,11 @@ printf = function (...) print (noquote (sprintf (...)))
 tooltips <- yaml.load_file("tooltips.yaml")
 for(i in 1:length(tooltips)) tooltips[[i]]$text <- paste(tooltips[[i]]$text, collapse=" ")
 printf("length of tooltips read: %d", length(tooltips))
-# tt <- list(longevityTab=list(selector="DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)",
-#                             text=paste0('[+-] causal evidence<br>',
-#                                        '[+-]? correlational only<br>',
-#                                         '+/- direction unknown, causal<br>',
-#                                         '+/-? unknown, correlational')))
-
 
 tbl.summary <- get(load("tbl.summary.1010x6.RData"))
-tbl.summary <- tbl.summary[, c("Gene", "Longevity", "Feature", "Function", "PMID")]
-colnames(tbl.summary)[3] <- "Longevity Feature"
+# tbl.summary <- tbl.summary[, c("Gene", "Longevity", "Feature", "Function", "PMID")]
+# colnames(tbl.summary)[3] <- "Longevity Feature"
+tbl.summary <- tbl.summary[, c("Gene", "Longevity", "PMID")]
 
 tbl.orthologsBySpecies <- get(load("tbl.orthologsBySpecies.9999x4.RData"))
 #----------------------------------------------------------------------------------------------------
@@ -28,7 +23,7 @@ tbl.orthologsBySpecies <- get(load("tbl.orthologsBySpecies.9999x4.RData"))
 #----------------------------------------------------------------------------------------------------
 ui <- fluidPage(
    includeCSS("lcGenes.css"),
-   titlePanel("Longevity-associated Genes & Homologies"),
+   titlePanel("Longevity-associated Genes & their Orthologs"),
    fluidRow(wellPanel(
        selectInput("selectDestination",
                    label="Table selection goes to",
@@ -38,9 +33,15 @@ ui <- fluidPage(
        with(tooltips[[3]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[4]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[5]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       with(tooltips[[6]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       with(tooltips[[7]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       with(tooltips[[8]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       with(tooltips[[9]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       with(tooltips[[10]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
+       bsTooltip("body > div > h2", "hoopoe", options = list(container="body", html=TRUE)),
        style="padding-bottom:0px; float: right; width: 200px;")),
    tabsetPanel(type="tabs", id="lcGenesTabs",
-       tabPanel(title="Gene", value="byGeneTab",
+       tabPanel(title="Gene", value="byGeneTab", id="byGeneTab",
                 wellPanel(DTOutput("geneTable"), style="margin-top:5px;")),
        tabPanel(title="GeneCard", value="geneCardsTab",
                 wellPanel(htmlOutput("geneCardsDisplay"))),
@@ -69,8 +70,10 @@ server <- function(session, input, output) {
                                     notesAndCommentsQuery=FALSE
                                     )
 
-   addTooltip(session, id="selectDestination", title="destination",
-               placement = "bottom", trigger = "hover",   options = NULL)
+    addTooltip(session, id="selectDestination",
+               title="Destination tab for <br> any selected row",
+               placement = "bottom", trigger = "hover",
+               options=list(container="body", html=TRUE))
 
    output$geneTable <- DT::renderDataTable({
        DT::datatable(tbl.summary,
@@ -78,10 +81,11 @@ server <- function(session, input, output) {
                      options=list(pageLength=10,
                                   dom='<lfip<t>>',
                                   scrollX=TRUE,
-                                  autoWidth=TRUE,
-                                  columnDefs=list(list(width="10%", targets=c(0,1)),
-                                                  list(width="40%", targets=c(2,3)),
-                                                  list(width="10%", targets=4)),
+                                  #autoWidth=TRUE,
+                                  columnDefs=list(list(width="33%", targets=c(0,1,2))),
+                                  #columnDefs=list(list(width="10%", targets=c(0,1)),
+                                  #                list(width="40%", targets=c(2,3)),
+                                  #                list(width="10%", targets=4)),
                                   paging=TRUE),
                      selection="single")
 
@@ -198,8 +202,8 @@ server <- function(session, input, output) {
    } # server
 
 #----------------------------------------------------------------------------------------------------
-# runApp(shinyApp(ui=ui, server=server), port=9003)
-shinyApp(ui=ui, server=server)
+runApp(shinyApp(ui=ui, server=server), port=9003)
+# shinyApp(ui=ui, server=server)
 
 
 

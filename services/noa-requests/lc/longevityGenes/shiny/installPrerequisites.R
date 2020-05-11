@@ -6,7 +6,9 @@ biocGet <- function(pkgs){
    }
 
 
-code.pkgs <- c("DT"
+code.pkgs <- c("DT",
+               "shinyBS",
+               "yaml"
                )
 
 for(code.pkg in code.pkgs){

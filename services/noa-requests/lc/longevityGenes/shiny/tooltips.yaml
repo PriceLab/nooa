@@ -9,7 +9,7 @@ Longevity:
           '[+-] causal evidence<br>',
           '[+-]? correlational only<br>',
           '+/- direction unknown, causal<br>',
-           '+/-? unknown, correlational']
+          '+/-? unknown, correlational']
    location: bottom
 
 LongevityFeature:

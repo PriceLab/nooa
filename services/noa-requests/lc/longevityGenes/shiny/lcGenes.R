@@ -2,7 +2,7 @@
 
 library(shiny)
 library(DT)
-options(warn=2)  # warning are turned into errors
+# options(warn=2)  # warning are turned into errors
 library(shinyBS)
 library(yaml)
 #----------------------------------------------------------------------------------------------------
@@ -11,6 +11,9 @@ printf = function (...) print (noquote (sprintf (...)))
 tooltips <- yaml.load_file("tooltips.yaml")
 for(i in 1:length(tooltips)) tooltips[[i]]$text <- paste(tooltips[[i]]$text, collapse=" ")
 printf("length of tooltips read: %d", length(tooltips))
+print(tooltips[1])
+print(tooltips[2])
+
 # tt <- list(longevityTab=list(selector="DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)",
 #                             text=paste0('[+-] causal evidence<br>',
 #                                        '[+-]? correlational only<br>',
@@ -28,32 +31,48 @@ tbl.orthologsBySpecies <- get(load("tbl.orthologsBySpecies.9999x4.RData"))
 #----------------------------------------------------------------------------------------------------
 ui <- fluidPage(
    includeCSS("lcGenes.css"),
-   titlePanel("Longevity-associated Genes & Homologies"),
-   fluidRow(wellPanel(
-       selectInput("selectDestination",
-                   label="Table selection goes to",
-                   c("NA", "HomoloGene", "GeneCards", "PubMed", "Orthologs")),
+   titlePanel("Longevity-associated Genes & Orthologs"),
+   #bsTooltip("dummyButton", "dummy!", "bottom", options = list(container = "body", html=TRUE)),
+   bsTooltip("DataTables_Table_0_info",
+             "gene?!", "bottom", options = list(container = "body", html=TRUE)),
+   # fluidRow(
        with(tooltips[[1]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[2]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[3]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[4]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[5]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
-       style="padding-bottom:0px; float: right; width: 200px;")),
-   tabsetPanel(type="tabs", id="lcGenesTabs",
+       tabsetPanel(type="tabs", id="lcGenesTabs",
+       tabPanel(title="Introduction", value="introductionTab", includeHTML("introduction.html")),
        tabPanel(title="Gene", value="byGeneTab",
-                wellPanel(DTOutput("geneTable"), style="margin-top:5px;")),
+                wellPanel(selectInput("selectDestination",
+                                      label="Table selection goes to",
+                                      choices=list(
+                                        " - " = "goNowhere",
+                                        "All Tabs" = "allTabs",
+                                        "GeneCards" = "genecards",
+                                        "HomoloGene" = "homologene",
+                                        "Orthologs" = "orthologs",
+                                        "PubMed (curated)" = "pubmedCurated",
+                                        "PubMed (gene + longevity)" = "pubmedLongevity"
+                                        ),
+                                      width=300),
+                          actionButton(label="Dummy", inputId="dummyButton"),
+                          DTOutput("geneTable"), style="margin-top:5px;")),
        tabPanel(title="GeneCard", value="geneCardsTab",
                 wellPanel(htmlOutput("geneCardsDisplay"))),
        tabPanel(title="HomoloGene", value="homoloGeneTab",
                 wellPanel(htmlOutput("homologeneDisplay"))),
-       tabPanel(title="PubMed", value="pubmedTab",
+       tabPanel(title="Curated PubMed", value="pubmedTab",
                 wellPanel(htmlOutput("pubmedDisplay"))),
+       tabPanel(title="De novo PubMed", value="pubmedDeNovoTab",
+                wellPanel(htmlOutput("pubmedDeNovoDisplay"))),
        tabPanel(title="Orthologs", value="orthologsTab",
                 wellPanel(DTOutput("orthologsTableDisplay"), style="margin-top:5px;")),
        tabPanel(title="Notes & Comments", value="notesAndCommentsTab",
                 wellPanel(htmlOutput("notesAndCommentsDisplay"))),
-       tabPanel("Help", includeHTML("help.html"))),
-   style="margin: 10px; margin-top: 5px;"
+       tabPanel("Help", includeHTML("help.html"))
+       ),
+   style="margin: 10px; margin-top: 10px; margin-bottom: 50px;"
    ) # fluidPage
 
 #----------------------------------------------------------------------------------------------------
@@ -62,9 +81,10 @@ server <- function(session, input, output) {
    reactiveInputs <- reactiveValues(gene="",
                                     destination="",
                                     pmid="",
-                                    homogeneQuery=FALSE,
+                                    homologeneQuery=FALSE,
                                     geneCardsQuery=FALSE,
                                     pubmedQuery=FALSE,
+                                    pubmedDeNovoQuery=FALSE,
                                     orthologsQuery=FALSE,
                                     notesAndCommentsQuery=FALSE
                                     )
@@ -88,6 +108,12 @@ server <- function(session, input, output) {
       })
 
    observeEvent(input$geneTable_rows_selected, {
+      reactiveInputs$geneCardsQuery <- FALSE
+      reactiveInputs$homologeneQuery <- FALSE
+      reactiveInputs$pubmedQuery <- FALSE
+      reactiveInputs$pubmedDeNovoQuery <- FALSE
+      reactiveInputs$orthologsQuery <- FALSE
+
       selectedTableRow <- isolate(input$geneTable_rows_selected)
       gene <- tbl.summary[selectedTableRow, "Gene"]
       printf("--- geneTable_rows_selected: %s", gene);
@@ -101,22 +127,38 @@ server <- function(session, input, output) {
       printf("destination: %s", destination)
 
       tabName <- "byGeneTab"
-      if(destination == "GeneCards"){
+
+      if(destination == "allTabs"){
+         printf("allTabs requested")
+         reactiveInputs$geneCardsQuery <- TRUE
+         reactiveInputs$homologeneQuery <- TRUE
+         reactiveInputs$pubmedQuery <- TRUE
+         reactiveInputs$pubmedDeNovoQuery <- TRUE
+         reactiveInputs$orthologsQuery <- TRUE
+         }
+
+      if(destination == "genecards"){
          tabName <- "geneCardsTab"
          reactiveInputs$geneCardsQuery <- TRUE
          }
 
-      if(destination == "HomoloGene"){
+      if(destination == "homologene"){
          tabName <- "homoloGeneTab"
          reactiveInputs$homologeneQuery <- TRUE
          }
 
-      if(destination == "PubMed"){
+      if(destination == "pubmedCurated"){
+         printf("destination: pubmedCurated")
          tabName <- "pubmedTab"
-         reactiveInputs$pubMedQuery <- TRUE
+         reactiveInputs$pubmedQuery <- TRUE
          }
 
-      if(destination == "Orthologs"){
+      if(destination == "pubmedLongevity"){
+         tabName <- "pubmedDeNovoTab"
+         reactiveInputs$pubmedDeNovoQuery <- TRUE
+         }
+
+      if(destination == "orthologs"){
          printf("setting destination to Orthologs")
          tabName <- "orthologsTab"
          reactiveInputs$orthologsQuery <- TRUE
@@ -141,25 +183,29 @@ server <- function(session, input, output) {
          printf("goi: %s", goi)
          printf("subset tbl.orthologsBySpecies by %s", goi)
          tbl.orthoSub <- subset(tbl.orthologsBySpecies, HsOrtholog_Gene_Symbol==goi)
+         reactiveInputs$orrhtologsQuery <- FALSE
          DT::datatable(tbl.orthoSub, rownames=FALSE, options=list(paging=FALSE))
          } # if Orthologs
       }) # orthologsDisplay
 
     output$geneCardsDisplay <- renderUI({
-      goi <- isolate(reactiveInputs$gene)
       if(reactiveInputs$geneCardsQuery){
+         goi <- isolate(reactiveInputs$gene)
+         printf(" geneCardsDisplay on %s", goi)
          printf("--- rendering geneCardsDisplay %s", goi)
          uri <- sprintf("https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s", goi)
          printf("uri: %s", uri)
          htmlText <- tags$iframe(src=uri, height=1000, width="100%")
+         # reactiveInputs$geneCardsQuery <- FALSE
          htmlText
          }
        }) # geneCardsDisplay
 
     output$homologeneDisplay <- renderUI({
        goi <- isolate(reactiveInputs$gene)
-       if(reactiveInputs$destination == "HomoloGene"){
-          printf("--- rendering homologeneDisplay")
+       printf("entering homologeneDisplay")
+       if(reactiveInputs$homologeneQuery){
+          printf("--- reandering homologeneDisplay")
           doi <- reactiveInputs$destination
           printf("goi: %s", goi)
           printf("doi: %s", doi)
@@ -172,13 +218,31 @@ server <- function(session, input, output) {
 
 
     output$pubmedDisplay <- renderUI({
-       if(reactiveInputs$destination == "PubMed"){
+       if(reactiveInputs$pubmedQuery){
           printf("--- rendering pubmedDisplay")
           pmids <- reactiveInputs$pmid
           doi <- reactiveInputs$destination
           printf("pmids: %s", pmids)
           printf("doi: %s", doi)
           uri <- sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", pmids)
+          printf("uri: %s", uri)
+          #browseURL(sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", "25677554"))
+          htmlText <- tags$iframe(src=uri, height=1000, width="100%")
+          #"NCBI restrictions required us to open a new browser page"
+          htmlText
+          }
+       }) # pubmedDisplay
+
+    output$pubmedDeNovoDisplay <- renderUI({
+       goi <- isolate(reactiveInputs$gene)
+       if(reactiveInputs$pubmedDeNovoQuery) {
+          printf("--- rendering pubmedDeNovoDisplay")
+          pmids <- reactiveInputs$pmid
+          doi <- reactiveInputs$destination
+          printf("pmids: %s", pmids)
+          printf("doi: %s", doi)
+          queryString <- sprintf("?term=%s+longevity", goi)
+          uri <- sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", queryString)
           printf("uri: %s", uri)
           #browseURL(sprintf("https://www.ncbi.nlm.nih.gov/pubmed/%s", "25677554"))
           htmlText <- tags$iframe(src=uri, height=1000, width="100%")
@@ -198,8 +262,8 @@ server <- function(session, input, output) {
    } # server
 
 #----------------------------------------------------------------------------------------------------
-# runApp(shinyApp(ui=ui, server=server), port=9003)
-shinyApp(ui=ui, server=server)
+runApp(shinyApp(ui=ui, server=server), port=9003)
+#shinyApp(ui=ui, server=server)
 
 
 

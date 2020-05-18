@@ -1,7 +1,13 @@
-Gene:
+DataTableGeneColumnTitle:
    selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(1)
    text: ['Human Gene Symbol (HGNC)']
    location: bottom
+
+DummyButton:
+   selector: dummyButton
+   text: ['dummy! #3 from yaml']
+   location: right
+   
 
 Longevity:
    selector: DataTables_Table_0_wrapper > div > div:nth-child(5) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)

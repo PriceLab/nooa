@@ -9,11 +9,11 @@ library(later)
 #----------------------------------------------------------------------------------------------------
 printf = function (...) print (noquote (sprintf (...)))
 #----------------------------------------------------------------------------------------------------
-tooltips <- yaml.load_file("tooltips.yaml")
-for(i in 1:length(tooltips)) tooltips[[i]]$text <- paste(tooltips[[i]]$text, collapse=" ")
-printf("length of tooltips read: %d", length(tooltips))
-print(tooltips[1])
-print(tooltips[2])
+# tooltips <- yaml.load_file("tooltips.yaml")
+# for(i in 1:length(tooltips)) tooltips[[i]]$text <- paste(tooltips[[i]]$text, collapse=" ")
+#printf("length of tooltips read: %d", length(tooltips))
+#print(tooltips[1])
+#print(tooltips[2])
 
 # tt <- list(longevityTab=list(selector="DataTables_Table_0_wrapper > div > div:nth-child(3) > div > div.dataTables_scrollHead > div > table > thead > tr > th:nth-child(2)",
 #                             text=paste0('[+-] causal evidence<br>',
@@ -56,14 +56,13 @@ mainGeneTab <- function()
            DTOutput("geneTable"), style="margin-top:5px;")
       ) # tabPanel
 
-   printf("length of tooltips: %d", length(tooltips))
-
-    for(i in 1:4){
-        with(tooltips[[i]], {
-           printf("selector: %s", selector);
-           printf(" text: %s", text);
-           bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))
-           })}
+   #printf("length of tooltips: %d", length(tooltips))
+   #for(i in 1:4){
+   #     with(tooltips[[i]], {
+   #        printf("selector: %s", selector);
+   #        printf(" text: %s", text);
+   #        bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))
+   #        })}
    tab
 
 } # mainGeneTab
@@ -108,8 +107,8 @@ server <- function(session, input, output) {
                                     notesAndCommentsQuery=FALSE
                                     )
 
-   addTooltip(session, id="selectDestination", title="destination",
-               placement = "bottom", trigger = "hover",   options = NULL)
+   #addTooltip(session, id="selectDestination", title="destination",
+   #            placement = "bottom", trigger = "hover",   options = NULL)
 
    observeEvent(input$geneTabHelpButton, {
       showModal(modalDialog(includeHTML("geneTableHelp.html"),
@@ -299,8 +298,8 @@ server <- function(session, input, output) {
    } # server
 
 #----------------------------------------------------------------------------------------------------
-runApp(shinyApp(ui=ui, server=server), port=9003)
-#shinyApp(ui=ui, server=server)
+#runApp(shinyApp(ui=ui, server=server), port=9003)
+shinyApp(ui=ui, server=server)
 
 
 

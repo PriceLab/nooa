@@ -1,4 +1,4 @@
-ID = 06may2020
+ID = 19may2020
 IMAGE_NAME = lc_genes_$(ID)
 TESTPORT=60055
 

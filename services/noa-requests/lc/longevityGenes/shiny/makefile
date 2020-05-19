@@ -7,7 +7,7 @@ build:
 
 bash:
 	docker run -it \
-           -p 9010:3838 \
+           -p 9012:3838 \
            --entrypoint /bin/bash \
            $(IMAGE_NAME)
 

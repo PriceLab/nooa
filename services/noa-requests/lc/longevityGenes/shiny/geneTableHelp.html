@@ -1,0 +1,37 @@
+<h4> Basic Design and Operation</h4>
+
+A gene name takes on different meanings in different contexts, for example:
+<ul>
+  <li> in an RNA-seq experiment,  a gene name refers to mRNA expression
+  <li> in a metabolic pathway,  the enzyme for which it codes
+  <li> in a pubmed search,  a list of journal artices in which the gene is prominently  mentioned
+  <li> in a database of homology, orthologous genes foundin other species
+</ul>
+
+This webapp facilitates the exploration of these multiple meanings.
+Proceed by first selecting your desired destination from the pulldown menu.
+Then use your mouse to select a gene row in the table.
+
+<p>
+Some immediately relevant &amp; curated information is presented directly in the table.
+Other information and explorations are available when you send a gene to one of
+the other tabs.
+
+<h4> Gene Table Columns </h4>
+
+<ol>
+  <li> <b>Gene</b>: the HGNC human gene symbol
+  <li> <b>Longevity</b>: a coded representation of evidence:
+      <ul>
+        <li> <b>+</b> positive causality
+        <li> <b>-</b> negative causality
+        <li> <b>+?</b> positive correlation
+        <li> <b>-?</b> negative correlation
+        <li> <b>+/-</b> mixed causal
+        <li> <b>+/-?</b> mixed correlation
+      </ul>
+  <li> <b>Longeivty Feature</b>:  attributes of this gene related to longevity (curated).
+  <li> <b>Function</b>: a summary of the function of this gene (curated).
+  <li> <b>PMID</b>:  longevity-related curated references for this gene.
+</ol>
+  

@@ -35,6 +35,7 @@ ui <- fluidPage(
    #bsTooltip("dummyButton", "dummy!", "bottom", options = list(container = "body", html=TRUE)),
    bsTooltip("DataTables_Table_0_info",
              "gene?!", "bottom", options = list(container = "body", html=TRUE)),
+
    # fluidRow(
        with(tooltips[[1]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
        with(tooltips[[2]], bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))),
@@ -58,7 +59,7 @@ ui <- fluidPage(
                                       width=300),
                           actionButton(label="Dummy", inputId="dummyButton"),
                           DTOutput("geneTable"), style="margin-top:5px;")),
-       tabPanel(title="GeneCard", value="geneCardsTab",
+       tabPanel(title="GeneCards", value="geneCardsTab",
                 wellPanel(htmlOutput("geneCardsDisplay"))),
        tabPanel(title="HomoloGene", value="homoloGeneTab",
                 wellPanel(htmlOutput("homologeneDisplay"))),
@@ -70,7 +71,10 @@ ui <- fluidPage(
                 wellPanel(DTOutput("orthologsTableDisplay"), style="margin-top:5px;")),
        tabPanel(title="Notes & Comments", value="notesAndCommentsTab",
                 wellPanel(htmlOutput("notesAndCommentsDisplay"))),
-       tabPanel("Help", includeHTML("help.html"))
+       tabPanel("Help", includeHTML("help.html")),
+       bsTooltip("table > thead > tr > th:nth-child(1)",
+                 "gene colname? yup yup yup", "bottom", options = list(container = "body", html=TRUE))
+
        ),
    style="margin: 10px; margin-top: 10px; margin-bottom: 50px;"
    ) # fluidPage
@@ -144,6 +148,7 @@ server <- function(session, input, output) {
 
       if(destination == "homologene"){
          tabName <- "homoloGeneTab"
+         printf("setting homogeneQuery TRUE")
          reactiveInputs$homologeneQuery <- TRUE
          }
 

@@ -38,7 +38,7 @@ introTab <- function()
 mainGeneTab <- function()
 {
    destinations <- list(" " = "goNowhere",
-                        # "All Tabs" = "allTabs",
+                        "All Tabs" = "allTabs",
                         "GeneCards" = "genecards",
                         "HomoloGene" = "homologene",
                         "PubMed (curated)" = "pubmedCurated",
@@ -49,20 +49,13 @@ mainGeneTab <- function()
    tab <- tabPanel(title="Gene Table", value="byGeneTab",
       wellPanel(
           fluidRow(
-             column(width=3, offset=0, selectInput("selectDestination", label="Table selection goes to",
-                                                   choices=destinations, width="400px")),
-             column(width=1, offset=8, actionButton(label="?", inputId="geneTabHelpButton", style="float: right"))
-             ),
+             #column(width=3, offset=0, selectInput("selectDestination", label="Table selection goes to",
+             #                                      choices=destinations, width="400px")),
+             column(width=8, offset=0, h4("Click on table row for your gene of interest, populate all tabs")),
+             column(width=1, offset=3, actionButton(label="?", inputId="geneTabHelpButton", style="float: right")),
+             style="margin-bottom: 20px"),
            DTOutput("geneTable"), style="margin-top:5px;")
       ) # tabPanel
-
-   #printf("length of tooltips: %d", length(tooltips))
-   #for(i in 1:4){
-   #     with(tooltips[[i]], {
-   #        printf("selector: %s", selector);
-   #        printf(" text: %s", text);
-   #        bsTooltip(selector, text, location, options = list(container = "body", html=TRUE))
-   #        })}
    tab
 
 } # mainGeneTab
@@ -74,7 +67,7 @@ ui <- fluidPage(
    titlePanel("Longevity-associated Genes & Orthologs"),
 
    tabsetPanel(type="tabs", id="lcGenesTabs",
-               introTab(),
+               #introTab(),
                mainGeneTab(),
                tabPanel(title="GeneCards", value="geneCardsTab",
                         wellPanel(htmlOutput("geneCardsDisplay"))),
@@ -82,7 +75,7 @@ ui <- fluidPage(
                         wellPanel(htmlOutput("homologeneDisplay"))),
                tabPanel(title="Curated PubMed", value="pubmedTab",
                         wellPanel(htmlOutput("pubmedDisplay"))),
-               tabPanel(title="De novo PubMed", value="pubmedDeNovoTab",
+               tabPanel(title="PubMed Gene+longevity", value="pubmedDeNovoTab",
                         wellPanel(htmlOutput("pubmedDeNovoDisplay"))),
                tabPanel(title="Orthologs", value="orthologsTab",
                         wellPanel(DTOutput("orthologsTableDisplay"), style="margin-top:5px;")),
@@ -107,9 +100,6 @@ server <- function(session, input, output) {
                                     notesAndCommentsQuery=FALSE
                                     )
 
-   #addTooltip(session, id="selectDestination", title="destination",
-   #            placement = "bottom", trigger = "hover",   options = NULL)
-
    observeEvent(input$geneTabHelpButton, {
       showModal(modalDialog(includeHTML("geneTableHelp.html"),
                             title = "Gene Table Help",
@@ -121,13 +111,14 @@ server <- function(session, input, output) {
    output$geneTable <- DT::renderDataTable({
        DT::datatable(tbl.summary,
                      rownames=FALSE,
-                     options=list(pageLength=10,
-                                  dom='<lfip<t>>',
+                     options=list(dom='<lfip<t>>',
                                   scrollX=TRUE,
                                   autoWidth=TRUE,
                                   columnDefs=list(list(width="10%", targets=c(0,1)),
                                                   list(width="40%", targets=c(2,3)),
                                                   list(width="10%", targets=4)),
+                                  lengthMenu = c(3,5,10,50),
+                                  pageLength = 5,
                                   paging=TRUE),
                      selection="single")
 
@@ -135,11 +126,11 @@ server <- function(session, input, output) {
 
    observeEvent(input$geneTable_rows_selected, {
 
-      #reactiveInputs$geneCardsQuery <- FALSE
-      #reactiveInputs$homologeneQuery <- FALSE
-      #reactiveInputs$pubmedQuery <- FALSE
-      #reactiveInputs$pubmedDeNovoQuery <- FALSE
-      #reactiveInputs$orthologsQuery <- FALSE
+      reactiveInputs$geneCardsQuery <- FALSE
+      reactiveInputs$homologeneQuery <- FALSE
+      reactiveInputs$pubmedQuery <- FALSE
+      reactiveInputs$pubmedDeNovoQuery <- FALSE
+      reactiveInputs$orthologsQuery <- FALSE
 
       selectedTableRow <- isolate(input$geneTable_rows_selected)
       gene <- tbl.summary[selectedTableRow, "Gene"]
@@ -147,10 +138,13 @@ server <- function(session, input, output) {
       pubmedIds <- tbl.summary[selectedTableRow, "PMID"]
          # but see https://www.html5rocks.com/en/tutorials/security/sandboxed-iframes/
          # https://github.com/niutech/x-frame-bypass
-      if(!grepl(",", pubmedIds))
-          pubmedIds <- sprintf("%s,%s", pubmedIds, pubmedIds)
+      #if(!grepl(",", pubmedIds))
+      #    pubmedIds <- sprintf("%s,%s", pubmedIds, pubmedIds)
       printf("pubmedIDs: %s", pubmedIds)
-      destination <- isolate(input$selectDestination)
+      #destination <- isolate(input$selectDestination)
+
+      destination <- "allTabs"
+
       printf("destination: %s", destination)
 
       tabName <- "byGeneTab"
@@ -235,7 +229,7 @@ server <- function(session, input, output) {
         }) # geneCardsDisplay
 
     output$homologeneDisplay <- renderUI({
-       printf(" ==== entering homologeneDisplay")
+       printf("=== entering homologeneDisplay")
        goi <- isolate(reactiveInputs$gene)
        if(reactiveInputs$homologeneQuery){
           printf("--- rendering homologeneDisplay")
@@ -251,7 +245,7 @@ server <- function(session, input, output) {
 
 
     output$pubmedDisplay <- renderUI({
-       printf(" ==== entering pubmedDisplay")
+       printf("=== entering pubmedDisplay")
        if(reactiveInputs$pubmedQuery){
           printf("--- rendering pubmedDisplay")
           pmids <- reactiveInputs$pmid
@@ -266,6 +260,7 @@ server <- function(session, input, output) {
        }) # pubmedDisplay
 
     output$pubmedDeNovoDisplay <- renderUI({
+       printf("=== entering pubmedDeNovoDisplay")
        goi <- isolate(reactiveInputs$gene)
        if(reactiveInputs$pubmedDeNovoQuery) {
           printf("--- rendering pubmedDeNovoDisplay")
@@ -294,6 +289,13 @@ server <- function(session, input, output) {
        htmlText <- tags$iframe(src=uri, height=1000, width="100%")
        htmlText
        }) # notesAndCommentsDisplay
+
+    outputOptions(output, "geneCardsDisplay",        suspendWhenHidden = FALSE)
+    outputOptions(output, "homologeneDisplay",       suspendWhenHidden = FALSE)
+    outputOptions(output, "notesAndCommentsDisplay", suspendWhenHidden = FALSE)
+    outputOptions(output, "pubmedDeNovoDisplay",     suspendWhenHidden = FALSE)
+    outputOptions(output, "pubmedDisplay",           suspendWhenHidden = FALSE)
+    outputOptions(output, "orthologsTableDisplay",   suspendWhenHidden = FALSE)
 
    } # server
 

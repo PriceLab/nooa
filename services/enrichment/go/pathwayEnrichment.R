@@ -7,6 +7,8 @@ library(org.Hs.eg.db)
 library(KEGG.db)
 library(RUnit)
 library(plumber)
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 #---------------------------------------------------------------------------------
 # kegg and GO enrichment needs entrez geneIDs.  we usually start with gene sybmols
 # conversion is offered in this file:
@@ -16,7 +18,7 @@ library(plumber)
 #     multiples: quasi-successful, multiple ids found for each of these symbols
 #     failures: no entrezIDs found for these symbols
 
-source("symToGeneID.R");
+source("~/github/nooa/services/enrichment/go/symToGeneID.R");
 # test_assignGeneIDs()
 
 #---------------------------------------------------------------------------------
@@ -97,20 +99,33 @@ goEnrich <- function(req, geneSymbols)
 #* @post /keggEnrich
 keggEnrich <- function(req, geneSymbols)
 {
+   debugFile <- file("~/tmp/keggEnrich.debug")
+   writeLines("line 101", debugFile)
    symbol.entrez.map <- assignGeneIDs(geneSymbols)
+   writeLines("line 103", debugFile)
 
    gene.universe = character(0)
+   writeLines("line 106", debugFile)
    geneIDs <- unlist(symbol.entrez.map$mapped, use.names=FALSE)
+   writeLines("line 108", debugFile)
 
    kegg.params <- new("KEGGHyperGParams", geneIds = unique(geneIDs),
                       universeGeneIds = character(0), annotation = "org.Hs.eg.db",
                       pvalueCutoff = 0.1, testDirection = "over")
 
+   writeLines("line 114", debugFile)
    kegg.hgr  <- hyperGTest(kegg.params)
+   #print(kegg.hgr)
+   writeLines("line 116", debugFile)
 
    tbl.kegg <- summary(kegg.hgr)
+   #print(tbl.kegg)
+   writeLines("line 119", debugFile)
+   close(debugFile)
 
-   return(toJSON(tbl.kegg))
+   result <- toJSON(tbl.kegg)
+
+   return(result)
 
 } # keggEnrich
 #--------------------------------------------------------------------------------
@@ -129,6 +144,7 @@ test_goEnrich <- function()
    checkEquals(tbl.go$Term[1], "negative regulation of amyloid-beta formation")
    checkEquals(tbl.go$genes[1], "BIN1;CLU")
 
+
 } # test_goEnrich
 #--------------------------------------------------------------------------------
 test_keggEnrich <- function()
@@ -145,6 +161,57 @@ test_keggEnrich <- function()
    checkEquals(tbl.kegg$Term[1], "Hematopoietic cell lineage")
    checkEquals(tbl.kegg$Count[1], 4)
 
-} # test_goEnrich
-#--------------------------------------------------------------------------------
+      #--------------------------------------
+      #--------------------------------------
 
+   cpt1a.tfs <- c("GRHL2", "POU2F2", "TP53", "KLF5", "TFAP2C", "BHLHE40","MEIS1", "SMAD1")
+   tbl.kegg.json <- keggEnrich(req=NA, cpt1a.tfs)
+   tbl.kegg <- fromJSON(tbl.kegg.json)
+   dim(tbl.kegg)
+
+
+} # test_keggEnrich
+#--------------------------------------------------------------------------------
+#* Get the chrom, start and end of gene symbol or rsid
+#* @post /geneLoc
+geneLoc <- function(req, gene, genome, shoulder)
+{
+   if(!genome %in% c("hg19", "hg38"))
+       return(toJSON(list(gene=gene, genome=genome, chrom=NA_character_, start=NA_integer_, end=NA_integer_)))
+
+   suppressMessages(
+     map <- assignGeneIDs(gene)
+     )
+
+   if(all(is.null(map$mapped)))
+      return(toJSON(list(gene=gene, genome=genome, chrom=NA_character_, start=NA_integer_, end=NA_integer_)))
+
+   geneID <- map$mapped[[gene]]
+
+   if(genome == "hg19"){
+      genes <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
+      tbl.loc <- as.data.frame(genes[geneID])
+      }
+
+   if(genome == "hg38"){
+      genes <- genes(TxDb.Hsapiens.UCSC.hg38.knownGene)
+      tbl.loc <- as.data.frame(genes[geneID])
+      }
+
+   chrom <- as.character(tbl.loc$seqnames[1])
+   start <- tbl.loc$start[1] - shoulder
+   end   <- tbl.loc$end[1] + shoulder
+
+   toJSON(list(gene=gene, genome=genome, chrom=chrom, start=start, end=end))
+
+} # geneLoc
+#---------------------------------------------------------------------------------
+test_geneLoc <- function()
+{
+   uri <- sprintf("http://localhost:8000/geneLoc")
+   body.jsonString <- sprintf('%s', toJSON(list(gene="APOE", genome="hg38", shoulder=100)))
+   r <- POST(uri, body=body.jsonString)
+   fromJSON(content(r)[[1]])
+
+} # test_geneLoc
+#--------------------------------------------------------------------------------

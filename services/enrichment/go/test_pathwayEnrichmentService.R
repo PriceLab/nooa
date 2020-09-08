@@ -9,6 +9,7 @@ runTests <- function()
     test_simpleEcho()
     test_postDemo()
     test_smallTable()
+    test_geneLoc()
     test_goEnrichment()
     test_keggEnrichment()
     })
@@ -102,6 +103,15 @@ test_keggEnrichment <- function()
    base.excision.repair <- grep("Base excision repair", tbl.kegg$Term)
    checkTrue(base.excision.repair <= 3)
 
+     #----------------------------------------
+
+   goi <- c("GRHL2", "POU2F2", "TP53", "KLF5", "TFAP2C", "BHLHE40","MEIS1", "SMAD1")
+   uri <- sprintf("http://localhost:8000/keggEnrich")
+   body.jsonString <- sprintf('%s', toJSON(list(geneSymbols=goi)))
+   r <- POST(uri, body=body.jsonString)
+   tbl.kegg <- fromJSON(content(r)[[1]])
+   checkTrue("p53 signaling pathway" %in% tbl.kegg$Term)
+
 } # test_keggEnrichment
 #------------------------------------------------------------------------------------------------------------------------
 
@@ -170,6 +180,42 @@ test_platinumResistanceGenes <- function()
    dim(tbl.kegg)
 
 } # test_platinumResitanceGenes
+#------------------------------------------------------------------------------------------------------------------------
+test_geneLoc <- function()
+{
+   uri <- sprintf("http://localhost:8000/geneLoc")
+   body.jsonString <- sprintf('%s', toJSON(list(gene="APOE", genome="hg38", shoulder=0)))
+   r <- POST(uri, body=body.jsonString)
+   x.hg38 <- fromJSON(content(r)[[1]])
+   checkEquals(with(x.hg38, sprintf("%s:%d-%d", chrom, start, end)), "chr19:44905791-44909393")
+
+   body.jsonString <- sprintf('%s', toJSON(list(gene="APOE", genome="hg38", shoulder=100)))
+   r <- POST(uri, body=body.jsonString)
+   x.hg38 <- fromJSON(content(r)[[1]])
+   checkEquals(with(x.hg38, sprintf("%s:%d-%d", chrom, start, end)), "chr19:44905691-44909493")
+
+   uri <- sprintf("http://localhost:8000/geneLoc")
+   body.jsonString <- sprintf('%s', toJSON(list(gene="APOE", genome="hg19", shoulder=0)))
+   r <- POST(uri, body=body.jsonString)
+   x.hg19 <- fromJSON(content(r)[[1]])
+   checkEquals(with(x.hg19, sprintf("%s:%d-%d", chrom, start, end)), "chr19:45409039-45412650")
+
+   body.jsonString <- sprintf('%s', toJSON(list(gene="APOE", genome="hg19", shoulder=100)))
+   r <- POST(uri, body=body.jsonString)
+   x.hg19 <- fromJSON(content(r)[[1]])
+   checkEquals(with(x.hg19, sprintf("%s:%d-%d", chrom, start, end)), "chr19:45408939-45412750")
+
+   body.jsonString <- sprintf('%s', toJSON(list(gene="bogus", genome="hg19", shoulder=100)))
+   r <- POST(uri, body=body.jsonString)
+   x.bogus <- fromJSON(content(r)[[1]])
+   with(x.bogus, checkTrue(all(is.na(chrom), is.na(start), is.na(end))))
+
+   body.jsonString <- sprintf('%s', toJSON(list(gene="bogus", genome="hg38", shoulder=100)))
+   r <- POST(uri, body=body.jsonString)
+   x.bogus <- fromJSON(content(r)[[1]])
+   with(x.bogus, checkTrue(all(is.na(chrom), is.na(start), is.na(end))))
+
+} # test_geneLoc
 #------------------------------------------------------------------------------------------------------------------------
 if(!interactive())
     runTests()

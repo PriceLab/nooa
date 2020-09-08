@@ -1,8 +1,8 @@
 default:
-	@echo targets: runService ps test
+	@echo targets: run ps kill test
 
 
-runService:
+run:
 	R -f runService.R &
 
 

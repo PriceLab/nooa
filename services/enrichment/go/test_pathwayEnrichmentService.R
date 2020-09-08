@@ -183,6 +183,8 @@ test_platinumResistanceGenes <- function()
 #------------------------------------------------------------------------------------------------------------------------
 test_geneLoc <- function()
 {
+   printf("--- test_geneLoc")
+
    uri <- sprintf("http://localhost:8000/geneLoc")
    body.jsonString <- sprintf('%s', toJSON(list(gene="APOE", genome="hg38", shoulder=0)))
    r <- POST(uri, body=body.jsonString)

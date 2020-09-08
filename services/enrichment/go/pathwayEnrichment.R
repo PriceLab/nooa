@@ -176,17 +176,19 @@ test_keggEnrich <- function()
 #* @post /geneLoc
 geneLoc <- function(req, gene, genome, shoulder)
 {
+   gene.upper <- toupper(gene)
+
    if(!genome %in% c("hg19", "hg38"))
-       return(toJSON(list(gene=gene, genome=genome, chrom=NA_character_, start=NA_integer_, end=NA_integer_)))
+       return(toJSON(list(gene=gene.upper, genome=genome, chrom=NA_character_, start=NA_integer_, end=NA_integer_)))
 
    suppressMessages(
-     map <- assignGeneIDs(gene)
+     map <- assignGeneIDs(gene.upper)
      )
 
    if(all(is.null(map$mapped)))
-      return(toJSON(list(gene=gene, genome=genome, chrom=NA_character_, start=NA_integer_, end=NA_integer_)))
+      return(toJSON(list(gene=gene.upper, genome=genome, chrom=NA_character_, start=NA_integer_, end=NA_integer_)))
 
-   geneID <- map$mapped[[gene]]
+   geneID <- map$mapped[[gene.upper]]
 
    if(genome == "hg19"){
       genes <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene)

@@ -215,6 +215,16 @@ test_geneLoc <- function()
    x.bogus <- fromJSON(content(r)[[1]])
    with(x.bogus, checkTrue(all(is.na(chrom), is.na(start), is.na(end))))
 
+      # make sure upper casing works
+   body.jsonString <- sprintf('%s', toJSON(list(gene="Myc", genome="hg38", shoulder=100)))
+   r <- POST(uri, body=body.jsonString)
+   x.myc <- fromJSON(content(r)[[1]])
+   checkTrue(with(x.myc, checkTrue(all(checkEquals(gene, "Myc"),
+                                       checkEquals(chrom, "chr8"),
+                                       checkEquals(start, 127735334),
+                                       checkEquals(end,127743051)))))
+
+
 } # test_geneLoc
 #------------------------------------------------------------------------------------------------------------------------
 if(!interactive())

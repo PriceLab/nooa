@@ -8,6 +8,8 @@ snpList <- c("rs6857", "rs769449", "rs2075650")
 coi <- c('refsnp_id', 'chr_name','chrom_start','chrom_end',
          'minor_allele','minor_allele_freq',
          'consequence_allele_string', 'phenotype_description',
+         'polyphen_prediction', 'polyphen_score',
+         'sift_prediction', 'sift_score',
          'pmid')
 
 # maybe also: phenotype_source, clinical_signficance, polyphen*, sift* pub_short_ref
@@ -49,10 +51,10 @@ write.table(tbl.pmid, sep=",", row.names=FALSE, quote=FALSE, file="tbl.pmid.csv"
 tbl.3.a
 
 
-tbl.600 <- read.table("fromPaola.tsv", sep="\t", as.is=TRUE, header=TRUE, row.names="SNP", nrow=-1)
-all(snpList %in% rownames(tbl.600))  # TRUE
+tbl.621 <- read.table("fromPaola.tsv", sep="\t", as.is=TRUE, header=TRUE, row.names="SNP", nrow=-1)
+all(snpList %in% rownames(tbl.621))  # TRUE
 
-tbl.600.anno <- getBM(attributes=coi, filters='snp_filter', values=rownames(tbl.600), mart=db)
-dim(tbl.600.anno)  # 10345 10
-
+tbl.621.anno <- getBM(attributes=coi, filters='snp_filter', values=rownames(tbl.621), mart=db)
+dim(tbl.621.anno)  # 10345 10
+save(tbl.621.anno, file="tbl.621.anno.Rdata")
 

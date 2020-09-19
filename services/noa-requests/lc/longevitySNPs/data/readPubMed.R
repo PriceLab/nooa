@@ -147,7 +147,7 @@ test_pmidsToTable <- function()
    checkEquals(tbl$title[6], "Proteomics of Long-Lived Mammals.")
 
       # 30 pmids at a time
-   pmids.180 <- readLines("pmids-180.txt")
+   pmids.180 <- readLines("~/github/nooa/services/noa-requests/lc/longevitySNPs/data/pmids-180.txt")
    tbl <- pmidsToTable(pmids.180[1:30])
    checkEquals(dim(tbl), c(30, 6))
    checkTrue(all(nchar(tbl$firstAuthor) > 0))

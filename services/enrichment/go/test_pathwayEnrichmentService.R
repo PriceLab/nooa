@@ -186,21 +186,25 @@ test_geneLoc <- function()
    printf("--- test_geneLoc")
 
    uri <- sprintf("http://localhost:8000/geneLoc")
+
    body.jsonString <- sprintf('%s', toJSON(list(gene="APOE", genome="hg38", shoulder=0)))
    r <- POST(uri, body=body.jsonString)
    x.hg38 <- fromJSON(content(r)[[1]])
    checkEquals(with(x.hg38, sprintf("%s:%d-%d", chrom, start, end)), "chr19:44905791-44909393")
+   checkEquals(x.hg38$strand, "+")
 
    body.jsonString <- sprintf('%s', toJSON(list(gene="APOE", genome="hg38", shoulder=100)))
    r <- POST(uri, body=body.jsonString)
    x.hg38 <- fromJSON(content(r)[[1]])
    checkEquals(with(x.hg38, sprintf("%s:%d-%d", chrom, start, end)), "chr19:44905691-44909493")
+   checkEquals(x.hg38$strand, "+")
 
    uri <- sprintf("http://localhost:8000/geneLoc")
    body.jsonString <- sprintf('%s', toJSON(list(gene="APOE", genome="hg19", shoulder=0)))
    r <- POST(uri, body=body.jsonString)
    x.hg19 <- fromJSON(content(r)[[1]])
    checkEquals(with(x.hg19, sprintf("%s:%d-%d", chrom, start, end)), "chr19:45409039-45412650")
+   checkEquals(x.hg19$strand, "+")
 
    body.jsonString <- sprintf('%s', toJSON(list(gene="APOE", genome="hg19", shoulder=100)))
    r <- POST(uri, body=body.jsonString)
@@ -226,6 +230,11 @@ test_geneLoc <- function()
                                        checkEquals(start, 127735334),
                                        checkEquals(end,127743051)))))
 
+      # check at least one "-" strand gene
+   body.jsonString <- sprintf('%s', toJSON(list(gene="ZNF560", genome="hg38", shoulder=100)))
+   r <- POST(uri, body=body.jsonString)
+   x.hg38 <- fromJSON(content(r)[[1]])
+   checkEquals(x.hg38$strand, "-")
 
 } # test_geneLoc
 #------------------------------------------------------------------------------------------------------------------------

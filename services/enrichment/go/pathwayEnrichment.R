@@ -191,20 +191,25 @@ geneLoc <- function(req, gene, genome, shoulder)
    geneID <- map$mapped[[gene.upper]]
 
    if(genome == "hg19"){
-      genes <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
+      suppressMessages(
+          genes <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene, single.strand.genes.only=TRUE)
+          )
       tbl.loc <- as.data.frame(genes[geneID])
       }
 
    if(genome == "hg38"){
-      genes <- genes(TxDb.Hsapiens.UCSC.hg38.knownGene)
+      suppressMessages(
+          genes <- genes(TxDb.Hsapiens.UCSC.hg38.knownGene, single.strand.genes.only=TRUE)
+          )
       tbl.loc <- as.data.frame(genes[geneID])
       }
 
-   chrom <- as.character(tbl.loc$seqnames[1])
-   start <- tbl.loc$start[1] - shoulder
-   end   <- tbl.loc$end[1] + shoulder
+   chrom  <- as.character(tbl.loc$seqnames[1])
+   start  <- tbl.loc$start[1] - shoulder
+   end    <- tbl.loc$end[1] + shoulder
+   strand <- tbl.loc$strand[1]
 
-   toJSON(list(gene=gene, genome=genome, chrom=chrom, start=start, end=end))
+   toJSON(list(gene=gene, genome=genome, chrom=chrom, start=start, end=end, strand=strand))
 
 } # geneLoc
 #---------------------------------------------------------------------------------

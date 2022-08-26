@@ -74,6 +74,31 @@ test_goEnrichment <- function()
    tbl <- fromJSON(content(r)[[1]])
    checkTrue(nrow(tbl) > 50)
    checkEquals(colnames(tbl), c("GOBPID", "Pvalue", "ExpCount", "Count", "Size", "Term", "genes", "OddsRatio"))
+   checkTrue(grep("^DNA repair$", tbl$Term) <= 3)  # probably always first, but allow for slop
+
+} # test_goEnrichment
+#------------------------------------------------------------------------------------------------------------------------
+test_goEnrichment.cellularComponent <- function()
+{
+   printf("--- test_goEnrichment.cellularComponent")
+
+      # genes symbols from clustered gautier erythropoiesis ribosomal proteins, raw and normalized
+      # here combined
+   goi <- c("RPL12", "RPL21", "RPL22", "RPL23", "RPL23A", "RPL24", "RPL37A", "RPS14", "RPS18",
+            "RPS19", "RPS20", "RPS21", "RPS28", "RPS3", "RPS8")
+
+   goi.string <- toJSON(goi)
+   uri <- sprintf("http://localhost:8000/goEnrich")
+   body.jsonString <- sprintf('%s', toJSON(list(geneSymbols=goi, ontology="CC")))
+
+   r <- POST(uri, body=body.jsonString)
+
+      #sprintf('{"geneSymbols": "%s"}', goi.string))
+   tbl <- fromJSON(content(r)[[1]])
+   dim(tbl)
+   checkTrue(nrow(tbl) > 50)
+   checkEquals(colnames(tbl), c("GOCCID", "Pvalue", "ExpCount", "Count", "Size", "Term", "genes", "OddsRatio"))
+   checkTrue(grep("^cytosolic ribosome$", tbl$Term) <= 3)  # probably always first, but allow for slop
 
 } # test_goEnrichment
 #------------------------------------------------------------------------------------------------------------------------
@@ -95,7 +120,7 @@ test_keggEnrichment <- function()
       #sprintf('{"geneSymbols": "%s"}', goi.string))
    tbl.kegg <- fromJSON(content(r)[[1]])
 
-   checkTrue(nrow(tbl.kegg) > 10)
+   checkTrue(nrow(tbl.kegg) > 8)
    checkEquals(colnames(tbl.kegg),
                c("KEGGID", "Pvalue", "OddsRatio", "ExpCount", "Count", "Size", "Term"))
 
